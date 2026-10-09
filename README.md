@@ -44,6 +44,7 @@ mais prática e eficiente.
 
 O protótipo das interfaces foi desenvolvido no **Figma**, contemplando
 fluxos para a área do brigadista e para a área administrativa.
+https://www.figma.com/design/hShkBKAdYY2uSikXEQWHcn/Brigada-App-%25E2%2580%2594-Prot%25C3%25B3tipo-Autom%25C3%25A1tico?node-id=5-2&p=f&t=b0otqXUNH5qSYvmm-0
 
 ## Tecnologias e ferramentas previstas
 
@@ -72,3 +73,4 @@ fluxos para a área do brigadista e para a área administrativa.
 ## Cliente
 
 **ABBA PAI CHURCH**
+
