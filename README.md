@@ -46,6 +46,25 @@ O protótipo das interfaces foi desenvolvido no **Figma**, contemplando
 fluxos para a área do brigadista e para a área administrativa.
 https://www.figma.com/design/hShkBKAdYY2uSikXEQWHcn/Brigada-App-%25E2%2580%2594-Prot%25C3%25B3tipo-Autom%25C3%25A1tico?node-id=5-2&p=f&t=b0otqXUNH5qSYvmm-0
 
+## Como rodar
+
+```bash
+npm install
+npx expo start
+```
+
+Depois é só ler o QR code com o app **Expo Go** no celular, ou apertar `a`
+no terminal para abrir no emulador do Android Studio.
+
+## Estrutura
+
+- `src/app/` — telas (Expo Router: cada arquivo é uma rota)
+  - `index.js` — Login
+  - `brigadista/` — área do brigadista, com navegação inferior
+    (`escalas.js` é Minhas escalas; `index.js` é o Início)
+- `src/components/` — componentes reutilizáveis (botão, campo, card, selo)
+- `src/theme/` — cores, fontes e medidas tiradas do Figma
+
 ## Tecnologias e ferramentas previstas
 
 - **JavaScript**
