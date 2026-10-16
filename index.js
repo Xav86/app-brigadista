@@ -1,2 +1,8 @@
-// Ponto de entrada do app: o Expo Router carrega as telas de src/app.
-import 'expo-router/entry';
+import { registerRootComponent } from 'expo';
+
+import App from './src/view/App';
+
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+// It also ensures that whether you load the app in Expo Go or in a native build,
+// the environment is set up appropriately
+registerRootComponent(App);
