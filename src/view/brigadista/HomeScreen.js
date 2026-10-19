@@ -1,36 +1,45 @@
-import { Feather } from '@expo/vector-icons';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from "@expo/vector-icons";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import Button from '../../components/Button';
-import Card from '../../components/Card';
-import StatusPill from '../../components/StatusPill';
-import { colors, fonts, spacing } from '../../theme';
+import Button from "../../components/Button";
+import Card from "../../components/Card";
+import StatusPill from "../../components/StatusPill";
+import { colors, fonts, spacing } from "../../theme";
 
 // Dados de exemplo enquanto não há backend/armazenamento local.
-const brigadista = { nome: 'Carlos' };
+const brigadista = { nome: "Carlos" };
 const proximaEscala = {
-  dia: '12',
-  mes: 'OUT',
-  titulo: 'Treinamento da Brigada',
-  horario: 'Segunda, 08:00 – 12:00',
-  local: 'Unidade Criciúma',
-  status: 'Confirmada',
+  dia: "12",
+  mes: "OUT",
+  titulo: "Treinamento da Brigada",
+  horario: "Segunda, 08:00 – 12:00",
+  local: "Unidade Criciúma",
+  status: "Confirmada",
 };
 const resumo = { confirmadas: 2, pendentes: 1 };
-const disponibilidade = { periodo: 'Outubro 2026', aberta: true };
+const disponibilidade = { periodo: "Outubro 2026", aberta: true };
 
 function emBreve() {
-  Alert.alert('Em breve', 'Esta funcionalidade ainda será construída.');
+  Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
 }
 
-export default function InicioBrigadista() {
+export default function InicioBrigadista({ navigation }) {
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.greeting}>Olá, {brigadista.nome}!</Text>
-          <Text style={styles.lead}>Acompanhe suas escalas e informe sua disponibilidade.</Text>
+          <Text style={styles.lead}>
+            Acompanhe suas escalas e informe sua disponibilidade.
+          </Text>
         </View>
 
         <Card tinted style={styles.gap}>
@@ -57,20 +66,31 @@ export default function InicioBrigadista() {
             </View>
           </View>
 
-          <Button title="Ver detalhes da escala" rightIcon="arrow-right" onPress={emBreve} />
+          <Button
+            title="Ver detalhes da escala"
+            rightIcon="arrow-right"
+            onPress={emBreve}
+          />
         </Card>
 
         <Text style={styles.sectionTitle}>Seu resumo</Text>
         <View style={styles.indicadores}>
-          <Pressable style={styles.flex} onPress={() => router.navigate('/brigadista/escalas')}>
+          <Pressable
+            style={styles.flex}
+            onPress={() => navigation.navigate("Escalas")}
+          >
             <Card style={styles.indicador}>
-              <Text style={[styles.numero, { color: colors.primary }]}>{resumo.confirmadas}</Text>
+              <Text style={[styles.numero, { color: colors.primary }]}>
+                {resumo.confirmadas}
+              </Text>
               <Text style={styles.indicadorLabel}>Escalas confirmadas</Text>
             </Card>
           </Pressable>
           <Pressable style={styles.flex} onPress={emBreve}>
             <Card style={styles.indicador}>
-              <Text style={[styles.numero, { color: colors.warning }]}>{resumo.pendentes}</Text>
+              <Text style={[styles.numero, { color: colors.warning }]}>
+                {resumo.pendentes}
+              </Text>
               <Text style={styles.indicadorLabel}>Solicitação pendente</Text>
             </Card>
           </Pressable>
@@ -84,13 +104,16 @@ export default function InicioBrigadista() {
             <Text style={styles.cardLabel}>Disponibilidade aberta</Text>
             <Text style={styles.metaText}>{disponibilidade.periodo}</Text>
           </View>
-          {disponibilidade.aberta ? <StatusPill label="Aberta" tone="primary" /> : null}
+          {disponibilidade.aberta ? (
+            <StatusPill label="Aberta" tone="primary" />
+          ) : null}
         </Card>
 
         <Card style={[styles.gap, styles.gapTop]}>
           <Text style={styles.cardLabel}>Quais dias você poderá servir?</Text>
           <Text style={styles.body}>
-            Informe os dias em que estará disponível e ajude a organizar as próximas escalas da brigada.
+            Informe os dias em que estará disponível e ajude a organizar as
+            próximas escalas da brigada.
           </Text>
           <Button
             title="Informar disponibilidade"
@@ -139,9 +162,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   rowBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   cardLabel: {
     fontFamily: fonts.semibold,
@@ -149,13 +172,13 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   escala: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 14,
   },
   data: {
     width: 52,
-    alignItems: 'center',
+    alignItems: "center",
   },
   dia: {
     fontFamily: fonts.bold,
@@ -180,8 +203,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   metaText: {
@@ -197,12 +220,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   indicadores: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   indicador: {
     minHeight: 100,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   numero: {
     fontFamily: fonts.bold,
@@ -215,8 +238,8 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   disponibilidade: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   simbolo: {
@@ -224,8 +247,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 12,
     backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   body: {
     fontFamily: fonts.regular,

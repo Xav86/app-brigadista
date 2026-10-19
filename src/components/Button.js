@@ -1,18 +1,39 @@
-import { Feather } from '@expo/vector-icons';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Feather } from "@expo/vector-icons";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-import { colors, fonts, radius } from '../theme';
+import { colors, fonts, radius } from "../theme";
 
 const VARIANTS = {
-  primary: { bg: colors.primary, pressed: colors.primaryPressed, fg: '#FFFFFF', border: colors.primary },
-  outline: { bg: colors.background, pressed: colors.primaryTint, fg: colors.primary, border: colors.primary },
-  soft: { bg: colors.primaryTint, pressed: colors.primarySoft, fg: colors.primary, border: colors.primaryTint },
+  primary: {
+    bg: colors.primary,
+    pressed: colors.primaryPressed,
+    fg: "#FFFFFF",
+    border: colors.primary,
+  },
+  outline: {
+    bg: colors.background,
+    pressed: colors.primaryTint,
+    fg: colors.primary,
+    border: colors.primary,
+  },
+  soft: {
+    bg: colors.primaryTint,
+    pressed: colors.primarySoft,
+    fg: colors.primary,
+    border: colors.primaryTint,
+  },
 };
 
 export default function Button({
   title,
   onPress,
-  variant = 'primary',
+  variant = "primary",
   leftIcon,
   leftIconFamily: LeftIconFamily = Feather,
   rightIcon,
@@ -37,7 +58,9 @@ export default function Button({
       ]}
     >
       <View style={styles.side}>
-        {leftIcon ? <LeftIconFamily name={leftIcon} size={20} color={v.fg} /> : null}
+        {leftIcon ? (
+          <LeftIconFamily name={leftIcon} size={20} color={v.fg} />
+        ) : null}
       </View>
       {loading ? (
         <ActivityIndicator color={v.fg} />
@@ -59,16 +82,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     borderWidth: 1,
     paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   side: {
     width: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   label: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     fontFamily: fonts.semibold,
     fontSize: 15,
   },

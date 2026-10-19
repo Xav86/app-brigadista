@@ -23,11 +23,21 @@ npx expo install --fix      # fix incompatible package versions
 
 Run lint and typecheck before declaring any task done.
 
+## Project structure
+
+- `src/view/` — entry point (`App.js`) and screens, split by user role: `login/`, `brigadista/`, `admin/`. Each role folder owns its screens plus a `<Role>Navigator.js`. This is where new screens go.
+- `src/components/` — shared UI components (`Button`, `Card`, `TextField`, `StatusPill`, `EmBreve`, `AppTabBar`). `AppTabBar` is role-agnostic — it takes an `icons` prop (route name → Feather icon) instead of hardcoding a role's routes.
+- `src/theme/` — design tokens (`colors`, `fonts`, `spacing`).
+- `docs/meu-app-firebase/` — archived reference copy of a colleague's original prototype (TypeScript + Firebase + Expo Router). Not part of the app; don't import from it.
+
 ## Navigation & Routing
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+- Use **React Navigation** (`@react-navigation/native` + `@react-navigation/bottom-tabs`).
+- `src/view/App.js` only loads fonts/splash and picks which top-level navigator to render based on `role` (`null` → `LoginScreen`, `'brigadista'` → `BrigadistaNavigator`, `'admin'` → `AdminNavigator`). It does not define tabs itself — each role's `<Role>Navigator.js` owns its own `Tab.Navigator`.
+- There is no real auth yet: `LoginScreen` calls `onLogin(role)` directly. Today, the "Entrar" button maps to `'brigadista'` and "Entrar com biometria" is a stand-in for `'admin'` access (both just validate usuário/senha) — replace this once real authentication/roles exist.
+- Screens receive `navigation` as a prop; use `navigation.navigate('ScreenName')` to move between tabs within the same role's navigator (screen names are the ones given to `Tab.Screen` in that role's `<Role>Navigator.js`).
+- This project does **not** use Expo Router — `expo-router` is not a dependency. Don't import from it.
+- Docs: https://reactnavigation.org/docs/getting-started
 
 ## Building with EAS
 

@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from "react-native";
 
-import { colors, fonts, radius } from '../theme';
+import { colors, fonts, radius } from "../theme";
 
 const TONES = {
   success: { bg: colors.successSoft, fg: colors.success },
@@ -9,7 +9,7 @@ const TONES = {
   neutral: { bg: colors.neutralSoft, fg: colors.textMuted },
 };
 
-export default function StatusPill({ label, tone = 'success' }) {
+export default function StatusPill({ label, tone = "success" }) {
   const t = TONES[tone];
   return (
     <View style={[styles.pill, { backgroundColor: t.bg }]}>

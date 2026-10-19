@@ -1,22 +1,28 @@
-import { Feather } from '@expo/vector-icons';
-import { forwardRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Feather } from "@expo/vector-icons";
+import { forwardRef, useState } from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { colors, fonts, radius } from '../theme';
+import { colors, fonts, radius } from "../theme";
 
 const TextField = forwardRef(function TextField(
   { icon, secure = false, error, style, ...inputProps },
-  ref
+  ref,
 ) {
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(secure);
 
-  const borderColor = error ? colors.primary : focused ? colors.text : colors.border;
+  const borderColor = error
+    ? colors.primary
+    : focused
+      ? colors.text
+      : colors.border;
 
   return (
     <View style={style}>
       <View style={[styles.box, { borderColor }]}>
-        {icon ? <Feather name={icon} size={20} color={colors.textMuted} /> : null}
+        {icon ? (
+          <Feather name={icon} size={20} color={colors.textMuted} />
+        ) : null}
         <TextInput
           ref={ref}
           style={styles.input}
@@ -31,9 +37,13 @@ const TextField = forwardRef(function TextField(
             onPress={() => setHidden((h) => !h)}
             hitSlop={12}
             accessibilityRole="button"
-            accessibilityLabel={hidden ? 'Mostrar senha' : 'Ocultar senha'}
+            accessibilityLabel={hidden ? "Mostrar senha" : "Ocultar senha"}
           >
-            <Feather name={hidden ? 'eye' : 'eye-off'} size={20} color={colors.textMuted} />
+            <Feather
+              name={hidden ? "eye" : "eye-off"}
+              size={20}
+              color={colors.textMuted}
+            />
           </Pressable>
         ) : null}
       </View>
@@ -47,8 +57,8 @@ export default TextField;
 const styles = StyleSheet.create({
   box: {
     minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingHorizontal: 14,
     borderWidth: 1,

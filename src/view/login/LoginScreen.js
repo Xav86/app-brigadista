@@ -1,6 +1,5 @@
-
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRef, useState } from 'react';
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -11,52 +10,57 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { colors, fonts, spacing } from '../../theme';
+import { colors, fonts, spacing } from "../../theme";
 
-import Button from '../../components/Button';
-import TextField from '../../components/TextField';
+import Button from "../../components/Button";
+import TextField from "../../components/TextField";
 
-const logo = require('../../assets/images/logo.png');
+const logo = require("../../assets/images/logo.png");
 
-export default function LoginScreen({ onLogin } ) {
-    const [usuario, setUsuario] = useState('');
-    const [senha, setSenha] = useState('');
-    const [errors, setErrors] = useState({});
-    const [loading, setLoading] = useState(false);
-    const senhaRef = useRef(null);
-  
-    function handleEntrar() {
-      const next = {};
+export default function LoginScreen({ onLogin }) {
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const senhaRef = useRef(null);
 
-      if (!usuario.trim()) next.usuario = 'Informe seu usuário';
-      if (!senha) next.senha = 'Informe sua senha';
+  function validar() {
+    const next = {};
 
-      setErrors(next);
+    if (!usuario.trim()) next.usuario = "Informe seu usuário";
+    if (!senha) next.senha = "Informe sua senha";
 
-      if (Object.keys(next).length) return;
+    setErrors(next);
 
-      onLogin();
-    }
-  
-    function handleBiometria() {
-      Alert.alert('Em breve', 'O login por biometria será habilitado nas próximas versões.');
-    }
-  
-    function handleAjuda() {
-      Alert.alert(
-        'Problemas para acessar?',
-        'Entre em contato com o administrador da brigada para recuperar seu acesso.'
-      );
-    }
+    return Object.keys(next).length === 0;
+  }
+
+  function handleEntrar() {
+    if (!validar()) return;
+    onLogin("brigadista");
+  }
+
+  // TODO: biometria real ainda não existe; por enquanto este botão é o acesso de admin.
+  function handleBiometria() {
+    if (!validar()) return;
+    onLogin("admin");
+  }
+
+  function handleAjuda() {
+    Alert.alert(
+      "Problemas para acessar?",
+      "Entre em contato com o administrador da brigada para recuperar seu acesso.",
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.content}
@@ -64,10 +68,16 @@ export default function LoginScreen({ onLogin } ) {
         >
           <View style={styles.hero}>
             <View style={styles.logoWrap}>
-              <Image source={logo} style={styles.logo} accessibilityLabel="Logo da brigada" />
+              <Image
+                source={logo}
+                style={styles.logo}
+                accessibilityLabel="Logo da brigada"
+              />
             </View>
             <Text style={styles.title}>Bem-vindo</Text>
-            <Text style={styles.subtitle}>Entre para acessar o sistema da brigada</Text>
+            <Text style={styles.subtitle}>
+              Entre para acessar o sistema da brigada
+            </Text>
           </View>
 
           <View style={styles.form}>
@@ -77,7 +87,8 @@ export default function LoginScreen({ onLogin } ) {
               value={usuario}
               onChangeText={(t) => {
                 setUsuario(t);
-                if (errors.usuario) setErrors((e) => ({ ...e, usuario: undefined }));
+                if (errors.usuario)
+                  setErrors((e) => ({ ...e, usuario: undefined }));
               }}
               error={errors.usuario}
               autoCapitalize="none"
@@ -95,7 +106,8 @@ export default function LoginScreen({ onLogin } ) {
               value={senha}
               onChangeText={(t) => {
                 setSenha(t);
-                if (errors.senha) setErrors((e) => ({ ...e, senha: undefined }));
+                if (errors.senha)
+                  setErrors((e) => ({ ...e, senha: undefined }));
               }}
               error={errors.senha}
               autoComplete="password"
@@ -127,12 +139,18 @@ export default function LoginScreen({ onLogin } ) {
             />
           </View>
 
-          <Pressable onPress={handleAjuda} style={styles.help} accessibilityRole="button">
+          <Pressable
+            onPress={handleAjuda}
+            style={styles.help}
+            accessibilityRole="button"
+          >
             <View style={styles.helpRow}>
               <Feather name="help-circle" size={16} color={colors.textMuted} />
               <Text style={styles.helpTitle}>Problemas para acessar?</Text>
             </View>
-            <Text style={styles.helpText}>Entre em contato com o administrador</Text>
+            <Text style={styles.helpText}>
+              Entre em contato com o administrador
+            </Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -154,7 +172,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   hero: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 48,
     paddingBottom: 32,
     gap: 8,
@@ -164,8 +182,8 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
   },
   logo: {
@@ -182,7 +200,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
   },
   form: {
     gap: 12,
@@ -191,8 +209,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     marginVertical: 4,
   },
@@ -207,13 +225,13 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   help: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
     paddingTop: 24,
   },
   helpRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   helpTitle: {

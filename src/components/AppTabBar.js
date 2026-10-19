@@ -1,27 +1,19 @@
+import { Feather } from "@expo/vector-icons";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Feather } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, fonts } from "../theme";
 
-import { colors, fonts } from '../theme';
-
-const ICONS = {
-  Home: 'home',
-  Agenda: 'calendar',
-  Escalas: 'clipboard',
-  Perfil: 'user',
-};
-
-export default function BrigadistaTabBar({ state, descriptors, navigation }) {
+export default function AppTabBar({
+  state,
+  descriptors,
+  navigation,
+  icons = {},
+}) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      style={[
-        styles.bar,
-        { paddingBottom: Math.max(insets.bottom, 8) },
-      ]}
-    >
+    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       {state.routes.map((route, index) => {
         const focused = state.index === index;
         const { options } = descriptors[route.key];
@@ -29,7 +21,7 @@ export default function BrigadistaTabBar({ state, descriptors, navigation }) {
 
         function onPress() {
           const event = navigation.emit({
-            type: 'tabPress',
+            type: "tabPress",
             target: route.key,
             canPreventDefault: true,
           });
@@ -48,7 +40,7 @@ export default function BrigadistaTabBar({ state, descriptors, navigation }) {
             style={[styles.item, focused && styles.itemActive]}
           >
             <Feather
-              name={ICONS[route.name] || 'circle'}
+              name={icons[route.name] || "circle"}
               size={20}
               color={color}
             />
@@ -58,9 +50,7 @@ export default function BrigadistaTabBar({ state, descriptors, navigation }) {
                 styles.label,
                 {
                   color,
-                  fontFamily: focused
-                    ? fonts.semibold
-                    : fonts.regular,
+                  fontFamily: focused ? fonts.semibold : fonts.regular,
                 },
               ]}
             >
@@ -75,8 +65,8 @@ export default function BrigadistaTabBar({ state, descriptors, navigation }) {
 
 const styles = StyleSheet.create({
   bar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingTop: 8,
     backgroundColor: colors.background,
@@ -85,7 +75,7 @@ const styles = StyleSheet.create({
   },
   item: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
     paddingVertical: 6,
     borderRadius: 12,

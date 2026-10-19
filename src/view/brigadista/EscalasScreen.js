@@ -1,51 +1,108 @@
-import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import Card from '../../components/Card';
-import StatusPill from '../../components/StatusPill';
-import { colors, fonts, spacing } from '../../theme';
+import Card from "../../components/Card";
+import StatusPill from "../../components/StatusPill";
+import { colors, fonts, spacing } from "../../theme";
 
 // Dados de exemplo enquanto não há backend/armazenamento local.
 const ESCALAS = {
   proximas: [
-    { id: '1', dia: '12', mes: 'OUT', titulo: 'Treinamento da Brigada', horario: '09:00 – 12:00', local: 'Unidade Criciúma', status: 'confirmado' },
-    { id: '2', dia: '19', mes: 'OUT', titulo: 'Evento Comunitário', horario: '14:00 – 18:00', local: 'Parque das Nações', status: 'confirmado' },
-    { id: '3', dia: '26', mes: 'OUT', titulo: 'Treinamento Prático', horario: '09:00 – 12:00', local: 'Unidade Criciúma', status: 'pendente' },
-    { id: '4', dia: '05', mes: 'NOV', titulo: 'Simulado de Emergência', horario: '08:00 – 12:00', local: 'Centro de Treinamento', status: 'pendente' },
+    {
+      id: "1",
+      dia: "12",
+      mes: "OUT",
+      titulo: "Treinamento da Brigada",
+      horario: "09:00 – 12:00",
+      local: "Unidade Criciúma",
+      status: "confirmado",
+    },
+    {
+      id: "2",
+      dia: "19",
+      mes: "OUT",
+      titulo: "Evento Comunitário",
+      horario: "14:00 – 18:00",
+      local: "Parque das Nações",
+      status: "confirmado",
+    },
+    {
+      id: "3",
+      dia: "26",
+      mes: "OUT",
+      titulo: "Treinamento Prático",
+      horario: "09:00 – 12:00",
+      local: "Unidade Criciúma",
+      status: "pendente",
+    },
+    {
+      id: "4",
+      dia: "05",
+      mes: "NOV",
+      titulo: "Simulado de Emergência",
+      horario: "08:00 – 12:00",
+      local: "Centro de Treinamento",
+      status: "pendente",
+    },
   ],
   anteriores: [
-    { id: '5', dia: '28', mes: 'SET', titulo: 'Culto de Domingo', horario: '18:00 – 21:00', local: 'Unidade Criciúma', status: 'concluido' },
-    { id: '6', dia: '14', mes: 'SET', titulo: 'Treinamento de Primeiros Socorros', horario: '09:00 – 12:00', local: 'Centro de Treinamento', status: 'concluido' },
+    {
+      id: "5",
+      dia: "28",
+      mes: "SET",
+      titulo: "Culto de Domingo",
+      horario: "18:00 – 21:00",
+      local: "Unidade Criciúma",
+      status: "concluido",
+    },
+    {
+      id: "6",
+      dia: "14",
+      mes: "SET",
+      titulo: "Treinamento de Primeiros Socorros",
+      horario: "09:00 – 12:00",
+      local: "Centro de Treinamento",
+      status: "concluido",
+    },
   ],
 };
 
 const STATUS = {
-  confirmado: { label: 'Confirmado', tone: 'success' },
-  pendente: { label: 'Pendente', tone: 'warning' },
-  concluido: { label: 'Concluído', tone: 'neutral' },
+  confirmado: { label: "Confirmado", tone: "success" },
+  pendente: { label: "Pendente", tone: "warning" },
+  concluido: { label: "Concluído", tone: "neutral" },
 };
 
 const ABAS = [
-  { key: 'proximas', label: 'Próximas' },
-  { key: 'anteriores', label: 'Anteriores' },
+  { key: "proximas", label: "Próximas" },
+  { key: "anteriores", label: "Anteriores" },
 ];
 
 function emBreve() {
-  Alert.alert('Em breve', 'Esta funcionalidade ainda será construída.');
+  Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
 }
 
 function EscalaCard({ escala }) {
   const status = STATUS[escala.status];
-  const passada = escala.status === 'concluido';
+  const passada = escala.status === "concluido";
 
   return (
     <Pressable onPress={emBreve} accessibilityRole="button">
       {({ pressed }) => (
         <Card style={[styles.card, pressed && styles.cardPressed]}>
           <View style={styles.data}>
-            <Text style={[styles.dia, passada && styles.diaPassado]}>{escala.dia}</Text>
+            <Text style={[styles.dia, passada && styles.diaPassado]}>
+              {escala.dia}
+            </Text>
             <Text style={styles.mes}>{escala.mes}</Text>
           </View>
           <View style={styles.detalhes}>
@@ -69,11 +126,11 @@ function EscalaCard({ escala }) {
 }
 
 export default function MinhasEscalas() {
-  const [aba, setAba] = useState('proximas');
+  const [aba, setAba] = useState("proximas");
   const lista = ESCALAS[aba];
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Minhas escalas</Text>
@@ -93,8 +150,12 @@ export default function MinhasEscalas() {
                 accessibilityRole="tab"
                 accessibilityState={{ selected: ativa }}
               >
-                <Text style={[styles.tabLabel, ativa && styles.tabLabelAtiva]}>{a.label}</Text>
-                <View style={[styles.underline, ativa && styles.underlineAtiva]} />
+                <Text style={[styles.tabLabel, ativa && styles.tabLabelAtiva]}>
+                  {a.label}
+                </Text>
+                <View
+                  style={[styles.underline, ativa && styles.underlineAtiva]}
+                />
               </Pressable>
             );
           })}
@@ -116,7 +177,8 @@ export default function MinhasEscalas() {
             </Pressable>
           </View>
           <Text style={styles.metaText}>
-            Visualize suas escalas em formato de calendário e tenha uma visão completa do mês.
+            Visualize suas escalas em formato de calendário e tenha uma visão
+            completa do mês.
           </Text>
         </Card>
       </ScrollView>
@@ -150,14 +212,14 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   tabs: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     marginBottom: 16,
   },
   tab: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 10,
   },
   tabLabel: {
@@ -172,7 +234,7 @@ const styles = StyleSheet.create({
   },
   underline: {
     height: 2,
-    width: '70%',
+    width: "70%",
     borderRadius: 1,
     marginBottom: -1,
   },
@@ -183,8 +245,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 14,
   },
   cardPressed: {
@@ -192,7 +254,7 @@ const styles = StyleSheet.create({
   },
   data: {
     width: 44,
-    alignItems: 'center',
+    alignItems: "center",
   },
   dia: {
     fontFamily: fonts.bold,
@@ -220,8 +282,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   metaText: {
@@ -234,7 +296,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textMuted,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: 24,
   },
   calendario: {
@@ -242,9 +304,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   calendarioHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   calendarioTitulo: {
     fontFamily: fonts.semibold,

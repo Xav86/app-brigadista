@@ -1,16 +1,5 @@
-
-import { View, Text } from 'react-native';
+import EmBreve from "../../components/EmBreve";
 
 export default function AgendaScreen() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <Text>Agenda do Brigadista</Text>
-    </View>
-  );
+  return <EmBreve title="Agenda" icon="calendar" />;
 }
