@@ -2,14 +2,14 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// Cole aqui os dados copiados do console do Firebase
+// Cole aqui os dados copiados do console do Firebase — nunca commite valores reais.
 const firebaseConfig = {
-  apiKey: "AIzaSyBub3XfCpU9-6XyYFXhyRfaqJITN6MoND8",
-  authDomain: "teste-3c2c1.firebaseapp.com",
-  projectId: "teste-3c2c1",
-  storageBucket: "teste-3c2c1.firebasestorage.app",
-  messagingSenderId: "608669319854",
-  appId: "1:608669319854:web:7c140fd9a1125f68ab633f"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID",
 };
 
 

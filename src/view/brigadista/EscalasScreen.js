@@ -1,4 +1,3 @@
-import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   Alert,
@@ -11,7 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Card from "../../components/Card";
-import StatusPill from "../../components/StatusPill";
+import EventCard from "../../components/EventCard";
 import { colors, fonts, spacing } from "../../theme";
 
 // Dados de exemplo enquanto não há backend/armazenamento local.
@@ -91,40 +90,6 @@ function emBreve() {
   Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
 }
 
-function EscalaCard({ escala }) {
-  const status = STATUS[escala.status];
-  const passada = escala.status === "concluido";
-
-  return (
-    <Pressable onPress={emBreve} accessibilityRole="button">
-      {({ pressed }) => (
-        <Card style={[styles.card, pressed && styles.cardPressed]}>
-          <View style={styles.data}>
-            <Text style={[styles.dia, passada && styles.diaPassado]}>
-              {escala.dia}
-            </Text>
-            <Text style={styles.mes}>{escala.mes}</Text>
-          </View>
-          <View style={styles.detalhes}>
-            <Text style={styles.titulo} numberOfLines={2}>
-              {escala.titulo}
-            </Text>
-            <View style={styles.meta}>
-              <Feather name="clock" size={13} color={colors.textMuted} />
-              <Text style={styles.metaText}>{escala.horario}</Text>
-            </View>
-            <View style={styles.meta}>
-              <Feather name="map-pin" size={13} color={colors.textMuted} />
-              <Text style={styles.metaText}>{escala.local}</Text>
-            </View>
-          </View>
-          <StatusPill label={status.label} tone={status.tone} />
-        </Card>
-      )}
-    </Pressable>
-  );
-}
-
 export default function MinhasEscalas() {
   const [aba, setAba] = useState("proximas");
   const lista = ESCALAS[aba];
@@ -163,7 +128,20 @@ export default function MinhasEscalas() {
 
         <View style={styles.lista}>
           {lista.length ? (
-            lista.map((e) => <EscalaCard key={e.id} escala={e} />)
+            lista.map((e) => (
+              <EventCard
+                key={e.id}
+                dia={e.dia}
+                mes={e.mes}
+                titulo={e.titulo}
+                horario={e.horario}
+                local={e.local}
+                statusLabel={STATUS[e.status].label}
+                statusTone={STATUS[e.status].tone}
+                passado={e.status === "concluido"}
+                onPress={emBreve}
+              />
+            ))
           ) : (
             <Text style={styles.vazio}>Nenhuma escala por aqui.</Text>
           )}
@@ -243,48 +221,6 @@ const styles = StyleSheet.create({
   },
   lista: {
     gap: 12,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  cardPressed: {
-    backgroundColor: colors.primaryTint,
-  },
-  data: {
-    width: 44,
-    alignItems: "center",
-  },
-  dia: {
-    fontFamily: fonts.bold,
-    fontSize: 28,
-    lineHeight: 34,
-    color: colors.primary,
-  },
-  diaPassado: {
-    color: colors.textMuted,
-  },
-  mes: {
-    fontFamily: fonts.semibold,
-    fontSize: 11,
-    letterSpacing: 1,
-    color: colors.textMuted,
-  },
-  detalhes: {
-    flex: 1,
-    gap: 4,
-  },
-  titulo: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.text,
-    marginBottom: 2,
-  },
-  meta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
   },
   metaText: {
     fontFamily: fonts.regular,

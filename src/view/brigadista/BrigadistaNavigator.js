@@ -2,7 +2,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import AppTabBar from "../../components/AppTabBar";
 import HomeScreen from "./HomeScreen";
-import AgendaScreen from "./AgendaScreen";
+import AgendaNavigator from "./agenda/AgendaNavigator";
 import EscalasScreen from "./EscalasScreen";
 import PerfilScreen from "./PerfilScreen";
 
@@ -28,7 +28,7 @@ export default function BrigadistaNavigator() {
       />
       <Tab.Screen
         name="Agenda"
-        component={AgendaScreen}
+        component={AgendaNavigator}
         options={{ title: "Agenda" }}
       />
       <Tab.Screen

@@ -26,13 +26,15 @@ Run lint and typecheck before declaring any task done.
 ## Project structure
 
 - `src/view/` — entry point (`App.js`) and screens, split by user role: `login/`, `brigadista/`, `admin/`. Each role folder owns its screens plus a `<Role>Navigator.js`. This is where new screens go.
-- `src/components/` — shared UI components (`Button`, `Card`, `TextField`, `StatusPill`, `EmBreve`, `AppTabBar`). `AppTabBar` is role-agnostic — it takes an `icons` prop (route name → Feather icon) instead of hardcoding a role's routes.
-- `src/theme/` — design tokens (`colors`, `fonts`, `spacing`).
-- `docs/meu-app-firebase/` — archived reference copy of a colleague's original prototype (TypeScript + Firebase + Expo Router). Not part of the app; don't import from it.
+  - A multi-step flow within a role (e.g. `brigadista/agenda/`) gets its own subfolder with a nested `<Flow>Navigator.js` (native-stack) plus a `use<Flow>…` hook for state shared across its screens. The role's `<Role>Navigator.js` then renders that subfolder's navigator as the `Tab.Screen` component instead of a single screen.
+- `src/components/` — shared UI components (`Button`, `Card`, `TextField`, `StatusPill`, `EmBreve`, `AppTabBar`, `EventCard`, `MonthCalendar`, `DateRow`, `EventSummary`). `AppTabBar` is role-agnostic — it takes an `icons` prop (route name → Feather icon) instead of hardcoding a role's routes. Icons across the app use `@expo/vector-icons`'s **Feather** set (fall back to `MaterialCommunityIcons` only for icons Feather lacks, e.g. `fingerprint`) — don't introduce other icon libraries.
+- `src/theme/` — design tokens (`colors`, `fonts`, `spacing`, `radius`).
+- `src/utils/` — framework-agnostic helpers, e.g. `calendar.js` (month grid generation, Portuguese date/weekday formatting, ISO date parsing).
+- `docs/meu-app-firebase/` — archived reference copy of a colleague's original prototype (TypeScript + Firebase + Expo Router). Not part of the app; don't import from it. `firebaseConfig.js` in there must only ever hold placeholder values (`YOUR_API_KEY`, etc.) — a real key was committed and flagged by GitHub secret scanning once already. Never paste real Firebase/API credentials into this repo; if real config is ever needed, use an untracked `.env`/local file instead.
 
 ## Navigation & Routing
 
-- Use **React Navigation** (`@react-navigation/native` + `@react-navigation/bottom-tabs`).
+- Use **React Navigation** (`@react-navigation/native` + `@react-navigation/bottom-tabs`; `@react-navigation/native-stack` for a nested multi-step flow inside a tab, e.g. `brigadista/agenda/AgendaNavigator.js`).
 - `src/view/App.js` only loads fonts/splash and picks which top-level navigator to render based on `role` (`null` → `LoginScreen`, `'brigadista'` → `BrigadistaNavigator`, `'admin'` → `AdminNavigator`). It does not define tabs itself — each role's `<Role>Navigator.js` owns its own `Tab.Navigator`.
 - There is no real auth yet: `LoginScreen` calls `onLogin(role)` directly. Today, the "Entrar" button maps to `'brigadista'` and "Entrar com biometria" is a stand-in for `'admin'` access (both just validate usuário/senha) — replace this once real authentication/roles exist.
 - Screens receive `navigation` as a prop; use `navigation.navigate('ScreenName')` to move between tabs within the same role's navigator (screen names are the ones given to `Tab.Screen` in that role's `<Role>Navigator.js`).

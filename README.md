@@ -58,29 +58,34 @@ no terminal para abrir no emulador do Android Studio.
 
 ## Estrutura
 
-- `src/app/` — telas (Expo Router: cada arquivo é uma rota)
-  - `index.js` — Login
-  - `brigadista/` — área do brigadista, com navegação inferior
-    (`escalas.js` é Minhas escalas; `index.js` é o Início)
-- `src/components/` — componentes reutilizáveis (botão, campo, card, selo)
-- `src/theme/` — cores, fontes e medidas tiradas do Figma
+- `src/view/` — telas, organizadas por papel de usuário:
+  - `App.js` — carrega as fontes, a splash screen e decide qual área mostrar
+  - `login/` — tela de login (hoje sem autenticação real: "Entrar" leva à área do brigadista, "Entrar com biometria" é um atalho provisório para a área do administrador)
+  - `brigadista/` — área do brigadista (`BrigadistaNavigator.js`, abas Início/Agenda/Escalas/Perfil)
+    - `agenda/` — fluxo de resposta a eventos (ver evento → confirmar presença → pedido enviado), com seu próprio navigator interno
+  - `admin/` — área do administrador (ainda placeholder)
+- `src/components/` — componentes reutilizáveis (botão, campo, card, selo de status, card de evento, calendário do mês, barra de abas, etc.)
+- `src/theme/` — cores, fontes, espaçamentos e raios tirados do Figma
+- `src/utils/` — funções auxiliares (ex.: formatação de datas em português, grade do calendário)
+- `docs/meu-app-firebase/` — cópia arquivada de um protótipo anterior (TypeScript + Firebase + Expo Router), guardada só como referência; não faz parte do app
 
-## Tecnologias e ferramentas previstas
+## Tecnologias
 
-- **JavaScript**
-- **React Native**
-- **Expo**
-- **React Native Paper** — componentes de interface
-- **AsyncStorage** — persistência local de dados
-- **Expo SQLite** — armazenamento local estruturado
-- **Node.js e npm/npx** — ferramentas de desenvolvimento
-- **Expo Go** — execução e testes do aplicativo durante o
-  desenvolvimento
-- **Git e GitHub** — versionamento e colaboração
+Já em uso:
 
-> As tecnologias acima representam a stack apresentada para o projeto. A
-> configuração e a integração efetivas dos recursos serão definidas e
-> verificadas durante a implementação.
+- **JavaScript**, **React Native** e **Expo**
+- **React Navigation** (abas + stack) para a navegação
+- **@expo-google-fonts/inter** para a fonte do app
+- Design system próprio (`src/components` + `src/theme`), sem biblioteca de UI externa
+- **Node.js / npm / npx**, **Git e GitHub**, **Expo Go** para desenvolvimento e testes
+
+Planejadas, ainda não integradas:
+
+- **Expo SQLite** e/ou **AsyncStorage** — persistência local
+- Autenticação real (hoje o login é só visual, sem backend)
+
+> O app ainda roda inteiramente com dados de exemplo (mock) nas telas — nada é
+> persistido ou enviado para um servidor.
 
 ## Equipe
 

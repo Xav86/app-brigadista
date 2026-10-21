@@ -6,6 +6,7 @@ export const colors = {
   primaryTint: "#FEF9F9",
   text: "#1C1F26",
   textMuted: "#707580",
+  textFaint: "#B2B8BF",
   border: "#E8EBF0",
   background: "#FFFFFF",
   neutralSoft: "#F2F4F7",
