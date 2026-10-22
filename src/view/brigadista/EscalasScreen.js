@@ -90,7 +90,7 @@ function emBreve() {
   Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
 }
 
-export default function MinhasEscalas() {
+export default function MinhasEscalas({ navigation }) {
   const [aba, setAba] = useState("proximas");
   const lista = ESCALAS[aba];
 
@@ -139,7 +139,7 @@ export default function MinhasEscalas() {
                 statusLabel={STATUS[e.status].label}
                 statusTone={STATUS[e.status].tone}
                 passado={e.status === "concluido"}
-                onPress={emBreve}
+                onPress={() => navigation.navigate("EscalaDetalhes", { escala: e })}
               />
             ))
           ) : (

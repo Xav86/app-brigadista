@@ -69,7 +69,20 @@ export default function InicioBrigadista({ navigation }) {
           <Button
             title="Ver detalhes da escala"
             rightIcon="arrow-right"
-            onPress={emBreve}
+            onPress={() =>
+              navigation.navigate("Escalas", {
+                screen: "EscalaDetalhes",
+                params: {
+                  escala: {
+                    ...proximaEscala,
+                    id: "1",
+                    horario: "08:00 – 12:00",
+                    status: "confirmado",
+                  },
+                },
+                initial: false,
+              })
+            }
           />
         </Card>
 
