@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Feather } from "@expo/vector-icons";
 import {
   Alert,
@@ -217,10 +216,3 @@ const styles = StyleSheet.create({
   },
   
 });
-=======
-import EmBreve from "../../components/EmBreve";
-
-export default function PerfilScreen() {
-  return <EmBreve title="Perfil" icon="user" />;
-}
->>>>>>> 733d4bb4fc3c654ca982f1614ea6e7cf2ed2feb3
