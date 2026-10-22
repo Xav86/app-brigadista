@@ -69,7 +69,6 @@ export default function InicioBrigadista({ navigation }) {
           <Button
             title="Ver detalhes da escala"
             rightIcon="arrow-right"
-<<<<<<< HEAD
             onPress={() =>
               navigation.navigate("Escalas", {
                 screen: "EscalaDetalhes",
@@ -84,9 +83,6 @@ export default function InicioBrigadista({ navigation }) {
                 initial: false,
               })
             }
-=======
-            onPress={emBreve}
->>>>>>> 733d4bb4fc3c654ca982f1614ea6e7cf2ed2feb3
           />
         </Card>
 
