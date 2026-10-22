@@ -75,3 +75,60 @@ export function getMonthWeeks(ano, mes) {
 
   return semanas;
 }
+
+export function getMonthName(mes) {
+  return MESES[mes];
+}
+
+export function startOfDay(data) {
+  return new Date(data.getFullYear(), data.getMonth(), data.getDate());
+}
+
+export function addDays(data, dias) {
+  return new Date(data.getFullYear(), data.getMonth(), data.getDate() + dias);
+}
+
+// Soma meses mantendo o dia; se o mês de destino for mais curto (ex.: 31/01 + 1),
+// usa o último dia dele em vez de pular para o mês seguinte.
+export function addMonths(data, meses) {
+  const alvo = new Date(data.getFullYear(), data.getMonth() + meses, 1);
+  const ultimoDia = new Date(
+    alvo.getFullYear(),
+    alvo.getMonth() + 1,
+    0,
+  ).getDate();
+  alvo.setDate(Math.min(data.getDate(), ultimoDia));
+  return alvo;
+}
+
+export function isSameDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+// "12/10/2026"
+export function formatDateBR(data) {
+  return `${pad2(data.getDate())}/${pad2(data.getMonth() + 1)}/${data.getFullYear()}`;
+}
+
+// "05 de outubro"
+export function formatDayMonth(data) {
+  return `${pad2(data.getDate())} de ${MESES[data.getMonth()].toLowerCase()}`;
+}
+
+// "24 out. 2026"
+export function formatCompactDate(data) {
+  return `${data.getDate()} ${MESES[data.getMonth()].slice(0, 3).toLowerCase()}. ${data.getFullYear()}`;
+}
+
+export function formatTime(data) {
+  return `${pad2(data.getHours())}:${pad2(data.getMinutes())}`;
+}
+
+// 0 = domingo, igual a Date.getDay().
+export function getWeekdayName(indice) {
+  return DIAS_SEMANA_LONGOS[indice];
+}
