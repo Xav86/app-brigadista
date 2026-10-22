@@ -90,7 +90,11 @@ function emBreve() {
   Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
 }
 
+<<<<<<< HEAD
 export default function MinhasEscalas({ navigation }) {
+=======
+export default function MinhasEscalas() {
+>>>>>>> 733d4bb4fc3c654ca982f1614ea6e7cf2ed2feb3
   const [aba, setAba] = useState("proximas");
   const lista = ESCALAS[aba];
 
@@ -139,7 +143,11 @@ export default function MinhasEscalas({ navigation }) {
                 statusLabel={STATUS[e.status].label}
                 statusTone={STATUS[e.status].tone}
                 passado={e.status === "concluido"}
+<<<<<<< HEAD
                 onPress={() => navigation.navigate("EscalaDetalhes", { escala: e })}
+=======
+                onPress={emBreve}
+>>>>>>> 733d4bb4fc3c654ca982f1614ea6e7cf2ed2feb3
               />
             ))
           ) : (
