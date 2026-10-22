@@ -118,21 +118,22 @@ export default function EventoFormScreen({ navigation, route }) {
   }
 
   function handleExcluir() {
-    Alert.alert(
-      "Excluir evento",
-      `Deseja excluir "${existente.nome}"? As escalas deste evento também serão removidas.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: () => {
-            excluirEvento(existente.id);
-            navigation.goBack();
-          },
-        },
-      ],
-    );
+    const mensagem = `Deseja excluir "${existente.nome}"? As escalas deste evento também serão removidas.`;
+
+    function confirmarExclusao() {
+      excluirEvento(existente.id);
+      navigation.goBack();
+    }
+
+    // Alert.alert com botões não funciona no Expo Web (react-native-web ignora os callbacks).
+    if (Platform.OS === "web") {
+      if (window.confirm(mensagem)) confirmarExclusao();
+      return;
+    }
+    Alert.alert("Excluir evento", mensagem, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: confirmarExclusao },
+    ]);
   }
 
   const recorrente = isRecorrente(campos.regra);

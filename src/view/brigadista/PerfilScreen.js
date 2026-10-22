@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import {
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -69,7 +70,12 @@ function OpcaoItem({ opcao, onPress}) {
 }
 
 export default function PerfilScreen({ navigation, onLogout }) {
+  // Alert.alert com botões não funciona no Expo Web (react-native-web ignora os callbacks).
   function confirmarSaida() {
+    if (Platform.OS === "web") {
+      if (window.confirm("Deseja realmente sair da sua conta?")) onLogout();
+      return;
+    }
     Alert.alert("Sair da conta", "Deseja realmente sair da sua conta?", [
       { text: "Cancelar", style: "cancel" },
       { text: "Sair", style: "destructive", onPress: onLogout },
