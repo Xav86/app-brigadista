@@ -132,3 +132,11 @@ export function formatTime(data) {
 export function getWeekdayName(indice) {
   return DIAS_SEMANA_LONGOS[indice];
 }
+
+// "hoje", "ontem", "há 3 dias"
+export function formatRelativeDays(data, hoje = new Date()) {
+  const dias = Math.round((startOfDay(hoje) - startOfDay(data)) / 86400000);
+  if (dias <= 0) return "hoje";
+  if (dias === 1) return "ontem";
+  return `há ${dias} dias`;
+}

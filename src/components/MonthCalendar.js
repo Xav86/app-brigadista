@@ -11,18 +11,19 @@ export default function MonthCalendar({
   onProximoMes,
   diasDestacados = [],
   onDiaPress,
+  diaDesabilitado,
 }) {
   const semanas = getMonthWeeks(ano, mes);
 
   return (
     <Card style={styles.card}>
       <View style={styles.cabecalho}>
-        <Pressable onPress={onMesAnterior} hitSlop={8}>
-          <Text style={styles.seta}>‹</Text>
+        <Pressable onPress={onMesAnterior} disabled={!onMesAnterior} hitSlop={8}>
+          <Text style={[styles.seta, !onMesAnterior && styles.setaOculta]}>‹</Text>
         </Pressable>
         <Text style={styles.mesLabel}>{getMonthLabel(ano, mes)}</Text>
-        <Pressable onPress={onProximoMes} hitSlop={8}>
-          <Text style={styles.seta}>›</Text>
+        <Pressable onPress={onProximoMes} disabled={!onProximoMes} hitSlop={8}>
+          <Text style={[styles.seta, !onProximoMes && styles.setaOculta]}>›</Text>
         </Pressable>
       </View>
 
@@ -39,18 +40,24 @@ export default function MonthCalendar({
           {semana.map(({ data, noMesAtual }) => {
             const iso = toIsoDate(data);
             const destacado = diasDestacados.includes(iso);
-            const Wrapper = onDiaPress ? Pressable : View;
+            const desabilitado = diaDesabilitado ? diaDesabilitado(iso) : false;
+            const Wrapper = onDiaPress && !desabilitado ? Pressable : View;
 
             return (
               <Wrapper
                 key={iso}
                 style={[styles.dia, destacado && styles.diaDestacado]}
-                onPress={onDiaPress ? () => onDiaPress(iso) : undefined}
+                onPress={Wrapper === Pressable ? () => onDiaPress(iso) : undefined}
+                accessibilityState={
+                  onDiaPress
+                    ? { selected: destacado, disabled: desabilitado }
+                    : undefined
+                }
               >
                 <Text
                   style={[
                     styles.diaTexto,
-                    !noMesAtual && styles.diaTextoFora,
+                    (!noMesAtual || desabilitado) && styles.diaTextoFora,
                     destacado && styles.diaTextoDestacado,
                   ]}
                 >
@@ -79,6 +86,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
     paddingHorizontal: 6,
+  },
+  setaOculta: {
+    opacity: 0,
   },
   mesLabel: {
     fontFamily: fonts.semibold,

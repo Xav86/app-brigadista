@@ -11,6 +11,7 @@ export default function EventCard({
   titulo,
   horario,
   local,
+  detalhe,
   statusLabel,
   statusTone,
   passado = false,
@@ -35,6 +36,7 @@ export default function EventCard({
             <Feather name="map-pin" size={13} color={colors.textMuted} />
             <Text style={styles.metaText}>{local}</Text>
           </View>
+          {detalhe ? <Text style={styles.detalhe}>{detalhe}</Text> : null}
         </View>
         {statusLabel ? <StatusPill label={statusLabel} tone={statusTone} /> : null}
       </Card>
@@ -97,6 +99,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 18,
+    color: colors.textMuted,
+  },
+  detalhe: {
+    marginTop: 2,
+    fontFamily: fonts.regular,
+    fontSize: 12,
     color: colors.textMuted,
   },
 });

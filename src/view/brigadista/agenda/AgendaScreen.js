@@ -66,6 +66,12 @@ export default function AgendaScreen({ navigation }) {
           <Pressable style={styles.chip} onPress={emBreve}>
             <Text style={styles.chipLabel}>Meus pedidos</Text>
           </Pressable>
+          <Pressable
+            style={styles.chip}
+            onPress={() => navigation.navigate("SolicitarDisponibilidade")}
+          >
+            <Text style={styles.chipLabel}>Solicitar disponibilidade</Text>
+          </Pressable>
         </View>
 
         <MonthCalendar

@@ -1,12 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "../../../components/Button";
@@ -26,10 +19,6 @@ import {
 import { useAdminDados } from "../useAdminDados";
 
 const QTD_PROXIMOS_EVENTOS = 2;
-
-function emBreve() {
-  Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
-}
 
 function contarEventosDoMes(eventos, hoje) {
   const inicioDoMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -105,6 +94,15 @@ export default function InicioScreen({ navigation }) {
     navigation.navigate("Eventos");
   }
 
+  // Abre o formulário dentro da aba Eventos, mantendo a lista por baixo para o "voltar".
+  function abrirFormularioEvento(eventoId) {
+    navigation.navigate("Eventos", {
+      screen: "EventoForm",
+      params: eventoId ? { eventoId } : undefined,
+      initial: false,
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -128,7 +126,7 @@ export default function InicioScreen({ navigation }) {
           <Button
             title="Analisar solicitações"
             rightIcon="arrow-right"
-            onPress={emBreve}
+            onPress={() => navigation.navigate("Solicitacoes")}
           />
         </Card>
 
@@ -174,7 +172,7 @@ export default function InicioScreen({ navigation }) {
                     (item) => item.data === toIsoDate(data),
                   ).length
                 }
-                onPress={irParaEventos}
+                onPress={() => abrirFormularioEvento(evento.id)}
               />
             ))}
           </View>
@@ -188,12 +186,12 @@ export default function InicioScreen({ navigation }) {
             title="Agendamento manual"
             variant="soft"
             rightIcon="arrow-right"
-            onPress={emBreve}
+            onPress={() => navigation.navigate("AgendamentoManual")}
           />
           <Button
             title="Criar evento"
             rightIcon="arrow-right"
-            onPress={irParaEventos}
+            onPress={() => abrirFormularioEvento()}
           />
         </View>
       </ScrollView>

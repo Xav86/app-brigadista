@@ -13,6 +13,7 @@ import Button from "../../components/Button";
 import Card from "../../components/Card";
 import StatusPill from "../../components/StatusPill";
 import { colors, fonts, spacing } from "../../theme";
+import { competenciaAberta } from "./agenda/competencia";
 
 // Dados de exemplo enquanto não há backend/armazenamento local.
 const brigadista = { nome: "Carlos" };
@@ -25,7 +26,7 @@ const proximaEscala = {
   status: "Confirmada",
 };
 const resumo = { confirmadas: 2, pendentes: 1 };
-const disponibilidade = { periodo: "Outubro 2026", aberta: true };
+const disponibilidade = { periodo: competenciaAberta().titulo, aberta: true };
 
 function emBreve() {
   Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
@@ -132,7 +133,12 @@ export default function InicioBrigadista({ navigation }) {
             title="Informar disponibilidade"
             variant="soft"
             rightIcon="arrow-right"
-            onPress={emBreve}
+            onPress={() =>
+              navigation.navigate("Agenda", {
+                screen: "SolicitarDisponibilidade",
+                initial: false,
+              })
+            }
           />
         </Card>
       </ScrollView>

@@ -13,9 +13,9 @@ import {
 const AdminDadosContext = createContext(null);
 
 export function AdminDadosProvider({ children }) {
-  const [eventos] = useState(EVENTOS_EXEMPLO);
-  const [escalas] = useState(ESCALAS_EXEMPLO);
-  const [solicitacoes] = useState(SOLICITACOES_EXEMPLO);
+  const [eventos, setEventos] = useState(EVENTOS_EXEMPLO);
+  const [escalas, setEscalas] = useState(ESCALAS_EXEMPLO);
+  const [solicitacoes, setSolicitacoes] = useState(SOLICITACOES_EXEMPLO);
 
   function buscarEvento(id) {
     return eventos.find((evento) => evento.id === id);
@@ -29,6 +29,53 @@ export function AdminDadosProvider({ children }) {
     return escalas.filter((item) => item.eventoId === eventoId);
   }
 
+  // Cria o evento quando não há `id`; caso contrário, atualiza o existente.
+  function salvarEvento(id, dados) {
+    if (!id) {
+      const novo = { ...dados, id: `e${Date.now()}`, notificacoesAtivas: true };
+      setEventos((atuais) => [...atuais, novo]);
+      return novo;
+    }
+
+    setEventos((atuais) =>
+      atuais.map((evento) =>
+        evento.id === id ? { ...evento, ...dados } : evento,
+      ),
+    );
+    return { ...buscarEvento(id), ...dados };
+  }
+
+  // Escala os brigadistas no evento para o dia informado (agendamento manual do admin).
+  function adicionarEscalas(eventoId, dataIso, brigadistaIds) {
+    const criadas = brigadistaIds.map((brigadistaId, indice) => ({
+      id: `s${Date.now()}-${indice}`,
+      eventoId,
+      brigadistaId,
+      data: dataIso,
+      status: "confirmado",
+      origem: "manual_admin",
+    }));
+    setEscalas((atuais) => [...atuais, ...criadas]);
+    return criadas;
+  }
+
+  // Aprova ou recusa uma ou mais solicitações de disponibilidade de uma vez.
+  function responderSolicitacoes(ids, status, motivo = null) {
+    setSolicitacoes((atuais) =>
+      atuais.map((pedido) =>
+        ids.includes(pedido.id)
+          ? { ...pedido, status, motivo, respondidaEm: new Date() }
+          : pedido,
+      ),
+    );
+  }
+
+  // Remove o evento e as escalas ligadas a ele.
+  function excluirEvento(id) {
+    setEventos((atuais) => atuais.filter((evento) => evento.id !== id));
+    setEscalas((atuais) => atuais.filter((item) => item.eventoId !== id));
+  }
+
   return (
     <AdminDadosContext.Provider
       value={{
@@ -40,6 +87,10 @@ export function AdminDadosProvider({ children }) {
         buscarEvento,
         buscarBrigadista,
         escalasDoEvento,
+        salvarEvento,
+        excluirEvento,
+        adicionarEscalas,
+        responderSolicitacoes,
       }}
     >
       {children}

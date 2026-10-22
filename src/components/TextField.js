@@ -25,7 +25,7 @@ const TextField = forwardRef(function TextField(
         ) : null}
         <TextInput
           ref={ref}
-          style={styles.input}
+          style={[styles.input, inputProps.multiline && styles.multiline]}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={hidden}
           onFocus={() => setFocused(true)}
@@ -71,6 +71,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 15,
     color: colors.text,
+  },
+  multiline: {
+    minHeight: 72,
+    textAlignVertical: "top",
   },
   error: {
     marginTop: 6,
