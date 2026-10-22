@@ -35,7 +35,9 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         {role === "brigadista" && <BrigadistaNavigator />}
-        {role === "admin" && <AdminNavigator />}
+        {role === "admin" && (
+          <AdminNavigator onLogout={() => setRole(null)} />
+        )}
         {!role && <LoginScreen onLogin={setRole} />}
       </NavigationContainer>
     </SafeAreaProvider>
