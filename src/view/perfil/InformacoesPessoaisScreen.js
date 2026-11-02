@@ -18,12 +18,12 @@ import {
   updatePassword,
 } from "firebase/auth";
 
-import Button from "../../../components/Button";
-import Card from "../../../components/Card";
-import TextField from "../../../components/TextField";
-import { auth } from "../../../services/firebase";
-import { buscarUsuarioPorEmail } from "../../../services/firestore";
-import { colors, fonts, radius, spacing } from "../../../theme";
+import Button from "../../components/Button";
+import Card from "../../components/Card";
+import TextField from "../../components/TextField";
+import { auth } from "../../services/firebase";
+import { buscarUsuarioPorEmail } from "../../services/firestore";
+import { colors, fonts, radius, spacing } from "../../theme";
 
 export default function InformacoesPessoaisScreen({ navigation }) {
   const [usuario, setUsuario] = useState(null);
