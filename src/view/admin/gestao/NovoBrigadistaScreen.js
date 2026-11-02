@@ -22,6 +22,7 @@ import {
 } from "../../../models";
 import { colors, fonts, radius, spacing } from "../../../theme";
 import { ESPECIALIDADES_LABELS, useBrigadistas } from "./useBrigadistas";
+import { cadastrarUsuarioAuthSemLogin } from "../../../services/authAdmin";
 
 const SEXOS_LABELS = {
   M: "Masculino (M)",
@@ -170,6 +171,11 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
       }
     }
 
+    const cpfApenasDigitos = cpf.replace(/\D/g, "");
+    if (!existente && cpfApenasDigitos.length < 6) {
+      nextErrors.cpf = "O CPF deve conter ao menos 6 dígitos para criar o acesso";
+    }
+
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -207,6 +213,11 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
       if (existente) {
         await atualizarBrigadista(existente.id, dadosUsuario);
       } else {
+        // 1. Cria a conta de autenticação primeiro sem trocar a sessão atual do administrador
+        const senhaInicial = (cpf ? cpf.replace(/\D/g, "").slice(0, 6) : "");
+        await cadastrarUsuarioAuthSemLogin(email.trim(), senhaInicial);
+
+        // 2. Salva o registro no Firestore
         await adicionarBrigadista(dadosUsuario);
       }
       navigation.goBack();
