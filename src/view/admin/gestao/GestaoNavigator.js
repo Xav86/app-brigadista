@@ -4,6 +4,7 @@ import BrigadistasScreen from "./BrigadistasScreen";
 import DetalhesBrigadistaScreen from "./DetalhesBrigadistaScreen";
 import GestaoScreen from "./GestaoScreen";
 import NovoBrigadistaScreen from "./NovoBrigadistaScreen";
+import InformacoesPessoaisScreen from "../../perfil/InformacoesPessoaisScreen";
 import { BrigadistasProvider } from "./useBrigadistas";
 
 const Stack = createNativeStackNavigator();
@@ -20,6 +21,10 @@ export default function GestaoNavigator({ onLogout }) {
         <Stack.Screen
           name="DetalhesBrigadista"
           component={DetalhesBrigadistaScreen}
+        />
+        <Stack.Screen
+          name="InformacoesPessoais"
+          component={InformacoesPessoaisScreen}
         />
       </Stack.Navigator>
     </BrigadistasProvider>

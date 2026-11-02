@@ -19,6 +19,11 @@ function emBreve() {
 export default function GestaoScreen({ navigation, onLogout }) {
   const opcoes = [
     {
+      key: "pessoais",
+      label: "Informações pessoais",
+      onPress: () => navigation.navigate("InformacoesPessoais"),
+    },
+    {
       key: "certificados",
       label: "Certificados",
       onPress: emBreve,

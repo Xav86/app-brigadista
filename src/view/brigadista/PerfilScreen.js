@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Platform,
@@ -14,9 +15,8 @@ import Button from "../../components/Button";
 import Card from "../../components/Card";
 import StatusPill from "../../components/StatusPill";
 import { colors, fonts, radius, spacing } from "../../theme";
-
-// dados ficticios
-const brigadista = { nome: "Carlos Almeida", funcao: "Brigadista", ativo: true };
+import { auth } from "../../services/firebase";
+import { buscarUsuarioPorEmail } from "../../services/firestore";
 
 const OPCOES = [
   {
@@ -24,6 +24,7 @@ const OPCOES = [
     icon: "user",
     titulo: "Informações pessoais",
     descricao: "Nome, e-mail e telefone",
+    rota: "InformacoesPessoais",
   },
   {
     id: "certificacoes",
@@ -50,7 +51,7 @@ function emBreve() {
   Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
 }
 
-function OpcaoItem({ opcao, onPress}) {
+function OpcaoItem({ opcao, onPress }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button">
       {({ pressed }) => (
@@ -70,7 +71,22 @@ function OpcaoItem({ opcao, onPress}) {
 }
 
 export default function PerfilScreen({ navigation, onLogout }) {
-  // Alert.alert com botões não funciona no Expo Web (react-native-web ignora os callbacks).
+  const [usuario, setUsuario] = useState(null);
+
+  useEffect(() => {
+    async function carregarPerfil() {
+      const email = auth.currentUser?.email;
+      if (!email) return;
+      try {
+        const dados = await buscarUsuarioPorEmail(email);
+        setUsuario(dados);
+      } catch (err) {
+        console.warn("Erro ao buscar dados do perfil:", err);
+      }
+    }
+    carregarPerfil();
+  }, []);
+
   function confirmarSaida() {
     if (Platform.OS === "web") {
       if (window.confirm("Deseja realmente sair da sua conta?")) onLogout();
@@ -81,6 +97,11 @@ export default function PerfilScreen({ navigation, onLogout }) {
       { text: "Sair", style: "destructive", onPress: onLogout },
     ]);
   }
+
+  const nomeExibicao =
+    usuario?.nome || auth.currentUser?.displayName || "Brigadista";
+  const funcaoExibicao =
+    usuario?.tipoUsuario === "admin" ? "Administrador" : "Brigadista";
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -97,18 +118,16 @@ export default function PerfilScreen({ navigation, onLogout }) {
             <View style={styles.avatarMiolo} />
           </View>
           <View style={styles.perfilInfo}>
-            <Text style={styles.nome}>{brigadista.nome}</Text>
+            <Text style={styles.nome}>{nomeExibicao}</Text>
             <View style={styles.pills}>
-              <StatusPill label={brigadista.funcao} tone="neutral" />
-              {brigadista.ativo ? (
-                <StatusPill label="Ativo" tone="success" />
-              ) : null}
+              <StatusPill label={funcaoExibicao} tone="neutral" />
+              <StatusPill label="Ativo" tone="success" />
             </View>
           </View>
         </Card>
 
         <View style={styles.lista}>
-                    {OPCOES.map((opcao) => (
+          {OPCOES.map((opcao) => (
             <OpcaoItem
               key={opcao.id}
               opcao={opcao}
@@ -159,33 +178,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
+    padding: 16,
   },
   avatar: {
     width: 56,
     height: 56,
-    borderRadius: radius.pill,
+    borderRadius: 28,
     backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarMiolo: {
-    width: 24,
-    height: 24,
-    borderRadius: radius.pill,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: colors.primary,
   },
   perfilInfo: {
     flex: 1,
-    gap: 8,
+    gap: 6,
   },
   nome: {
     fontFamily: fonts.semibold,
-    fontSize: 17,
+    fontSize: 16,
     color: colors.text,
   },
   pills: {
     flexDirection: "row",
-    gap: 8,
+    gap: 6,
   },
   lista: {
     gap: 10,
@@ -194,6 +214,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
   },
   opcaoPressed: {
     backgroundColor: colors.primaryTint,
@@ -220,5 +242,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
   },
-  
 });

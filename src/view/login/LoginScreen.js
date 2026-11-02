@@ -12,7 +12,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 
 import { colors, fonts, spacing } from "../../theme";
 import Button from "../../components/Button";
@@ -22,30 +25,13 @@ import { buscarUsuarioPorEmail } from "../../services/firestore";
 
 const logo = require("../../assets/images/logo.png");
 
-function traduzirErroFirebase(codigo) {
-  switch (codigo) {
-    case "auth/invalid-credential":
-    case "auth/user-not-found":
-    case "auth/wrong-password":
-      return "E-mail ou senha incorretos.";
-    case "auth/invalid-email":
-      return "O formato do e-mail é inválido.";
-    case "auth/user-disabled":
-      return "Este usuário foi desativado. Contate o administrador.";
-    case "auth/too-many-requests":
-      return "Muitas tentativas sem sucesso. Tente novamente mais tarde.";
-    case "auth/network-request-failed":
-      return "Falha de conexão. Verifique sua internet.";
-    default:
-      return "Ocorreu um erro ao entrar. Verifique seus dados e tente novamente.";
-  }
-}
-
 export default function LoginScreen({ onLogin }) {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [errors, setErrors] = useState({});
+  const [erroLoginGeral, setErroLoginGeral] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redefinindo, setRedefinindo] = useState(false);
   const senhaRef = useRef(null);
 
   function validar() {
@@ -55,11 +41,11 @@ export default function LoginScreen({ onLogin }) {
     if (!senha) next.senha = "Informe sua senha";
 
     setErrors(next);
-
     return Object.keys(next).length === 0;
   }
 
   async function handleEntrar() {
+    setErroLoginGeral("");
     if (!validar()) return;
 
     try {
@@ -76,11 +62,12 @@ export default function LoginScreen({ onLogin }) {
       );
 
       // 2. Consulta no Firestore para recuperar o perfil e papel (role)
-      const perfil = await buscarUsuarioPorEmail(credencial.user.email || emailLimpo);
+      const perfil = await buscarUsuarioPorEmail(
+        credencial.user.email || emailLimpo,
+      );
 
       if (!perfil) {
-        Alert.alert(
-          "Perfil não localizado",
+        setErroLoginGeral(
           "Usuário autenticado, mas o cadastro não foi encontrado no sistema.",
         );
         return;
@@ -90,10 +77,61 @@ export default function LoginScreen({ onLogin }) {
       const role = perfil.tipoUsuario === "admin" ? "admin" : "brigadista";
       onLogin(role);
     } catch (error) {
-      const msg = traduzirErroFirebase(error?.code);
-      Alert.alert("Não foi possível entrar", msg);
+      if (
+        error?.code === "auth/invalid-credential" ||
+        error?.code === "auth/user-not-found" ||
+        error?.code === "auth/wrong-password"
+      ) {
+        setErroLoginGeral("E-mail ou senha inválidos. Verifique e tente novamente.");
+      } else if (error?.code === "auth/invalid-email") {
+        setErrors((e) => ({ ...e, usuario: "Formato de e-mail inválido." }));
+      } else if (error?.code === "auth/user-disabled") {
+        setErroLoginGeral("Este usuário foi desativado. Contate o administrador.");
+      } else if (error?.code === "auth/too-many-requests") {
+        setErroLoginGeral(
+          "Muitas tentativas sem sucesso. Tente novamente mais tarde.",
+        );
+      } else {
+        setErroLoginGeral("Falha ao entrar. Verifique sua conexão e tente novamente.");
+      }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleEsqueciSenha() {
+    const emailLimpo = usuario.trim().toLowerCase();
+    if (!emailLimpo) {
+      setErrors((e) => ({
+        ...e,
+        usuario: "Digite seu e-mail acima para redefinir a senha",
+      }));
+      return;
+    }
+
+    try {
+      setRedefinindo(true);
+      await sendPasswordResetEmail(auth, emailLimpo);
+      Alert.alert(
+        "E-mail de recuperação enviado",
+        `Enviamos um link para redefinição de senha para:\n${emailLimpo}\n\nVerifique também sua caixa de spam.`,
+      );
+    } catch (error) {
+      if (error?.code === "auth/user-not-found") {
+        Alert.alert(
+          "E-mail não encontrado",
+          "Não encontramos nenhuma conta com o e-mail informado.",
+        );
+      } else if (error?.code === "auth/invalid-email") {
+        Alert.alert("E-mail inválido", "Informe um endereço de e-mail válido.");
+      } else {
+        Alert.alert(
+          "Erro ao redefinir senha",
+          "Não foi possível enviar o e-mail de recuperação. Tente novamente mais tarde.",
+        );
+      }
+    } finally {
+      setRedefinindo(false);
     }
   }
 
@@ -136,12 +174,21 @@ export default function LoginScreen({ onLogin }) {
           </View>
 
           <View style={styles.form}>
+            {/* Mensagem destacada na tela para e-mail ou senha inválidos */}
+            {erroLoginGeral ? (
+              <View style={styles.alertaErro}>
+                <Feather name="alert-circle" size={16} color={colors.primary} />
+                <Text style={styles.alertaErroTexto}>{erroLoginGeral}</Text>
+              </View>
+            ) : null}
+
             <TextField
               icon="mail"
               placeholder="E-mail"
               value={usuario}
               onChangeText={(t) => {
                 setUsuario(t);
+                if (erroLoginGeral) setErroLoginGeral("");
                 if (errors.usuario)
                   setErrors((e) => ({ ...e, usuario: undefined }));
               }}
@@ -154,6 +201,7 @@ export default function LoginScreen({ onLogin }) {
               returnKeyType="next"
               onSubmitEditing={() => senhaRef.current?.focus()}
             />
+
             <TextField
               ref={senhaRef}
               icon="lock"
@@ -162,6 +210,7 @@ export default function LoginScreen({ onLogin }) {
               value={senha}
               onChangeText={(t) => {
                 setSenha(t);
+                if (erroLoginGeral) setErroLoginGeral("");
                 if (errors.senha)
                   setErrors((e) => ({ ...e, senha: undefined }));
               }}
@@ -171,6 +220,18 @@ export default function LoginScreen({ onLogin }) {
               returnKeyType="go"
               onSubmitEditing={handleEntrar}
             />
+
+            {/* Opção nativa para redefinir senha */}
+            <Pressable
+              onPress={handleEsqueciSenha}
+              disabled={redefinindo}
+              style={styles.esqueciSenhaWrap}
+              hitSlop={8}
+            >
+              <Text style={styles.esqueciSenhaTexto}>
+                {redefinindo ? "Enviando e-mail..." : "Esqueceu a senha?"}
+              </Text>
+            </Pressable>
 
             <Button
               title="Entrar"
@@ -260,6 +321,33 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 12,
+  },
+  alertaErro: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: "#FAD2D4",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  alertaErroTexto: {
+    flex: 1,
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.primary,
+  },
+  esqueciSenhaWrap: {
+    alignSelf: "flex-end",
+    marginTop: -4,
+    marginBottom: 4,
+  },
+  esqueciSenhaTexto: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.primary,
   },
   cta: {
     marginTop: 4,
