@@ -35,36 +35,79 @@ const TIPOS_USUARIO_LABELS = {
   admin: "Administrador",
 };
 
-function normalizarDataIso(valor = "") {
+/**
+ * Converte data para o formato visual "DD-MM-AAAA".
+ * Aceita entradas em "YYYY-MM-DD", "DD/MM/YYYY" ou "DD-MM-YYYY".
+ */
+function paraFormatoVisualData(valor = "") {
+  if (!valor) return "";
+  const isoMatch = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const [, ano, mes, dia] = isoMatch;
+    return `${dia}-${mes}-${ano}`;
+  }
+  const barraMatch = valor.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (barraMatch) {
+    const [, dia, mes, ano] = barraMatch;
+    return `${dia}-${mes}-${ano}`;
+  }
+  return valor;
+}
+
+/**
+ * Normaliza qualquer data digitada (DD-MM-AAAA, DD/MM/AAAA, AAAA-MM-DD)
+ * para o padrão ISO "AAAA-MM-DD" exigido pelo Firestore.
+ */
+function normalizarParaIso(valor = "") {
   const limpo = valor.trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(limpo)) {
     return limpo;
   }
-  const brMatch = limpo.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (brMatch) {
-    const [, dia, mes, ano] = brMatch;
+  const ddmmyyyy = limpo.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+  if (ddmmyyyy) {
+    const [, dia, mes, ano] = ddmmyyyy;
     return `${ano}-${mes}-${dia}`;
   }
   return limpo;
 }
 
-function hojeIso() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+/**
+ * Aplica máscara de data conforme o usuário digita: DD-MM-AAAA
+ */
+function formatarMascaraData(texto = "") {
+  const digitos = texto.replace(/\D/g, "").slice(0, 8);
+  if (digitos.length <= 2) return digitos;
+  if (digitos.length <= 4) return `${digitos.slice(0, 2)}-${digitos.slice(2)}`;
+  return `${digitos.slice(0, 2)}-${digitos.slice(2, 4)}-${digitos.slice(4, 8)}`;
 }
 
-function somarMesesIso(dataIso, meses = 12) {
-  const match = dataIso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  const base = match
-    ? new Date(Number(match[1]), Number(match[2]) - 1 + meses, Number(match[3]))
-    : new Date(Date.now() + meses * 30 * 86400000);
-  const y = base.getFullYear();
-  const m = String(base.getMonth() + 1).padStart(2, "0");
-  const day = String(base.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+/**
+ * Aplica máscara de CPF conforme o usuário digita: 111.111.111-11
+ */
+function formatarMascaraCpf(texto = "") {
+  const digitos = texto.replace(/\D/g, "").slice(0, 11);
+  if (digitos.length <= 3) return digitos;
+  if (digitos.length <= 6) return `${digitos.slice(0, 3)}.${digitos.slice(3)}`;
+  if (digitos.length <= 9)
+    return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6)}`;
+  return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9, 11)}`;
+}
+
+function hojeVisual() {
+  const d = new Date();
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const ano = d.getFullYear();
+  return `${dia}-${mes}-${ano}`;
+}
+
+function somarMesesVisual(meses = 12) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + meses);
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const ano = d.getFullYear();
+  return `${dia}-${mes}-${ano}`;
 }
 
 export default function NovoBrigadistaScreen({ navigation, route }) {
@@ -80,9 +123,9 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
 
   const [nome, setNome] = useState(existente?.nome ?? "");
   const [email, setEmail] = useState(existente?.email ?? "");
-  const [cpf, setCpf] = useState(existente?.cpf ?? "");
+  const [cpf, setCpf] = useState(formatarMascaraCpf(existente?.cpf ?? ""));
   const [dataNascimento, setDataNascimento] = useState(
-    existente?.dataNascimento ?? "",
+    paraFormatoVisualData(existente?.dataNascimento ?? ""),
   );
   const [sexo, setSexo] = useState(existente?.sexo ?? "M");
   const [tipoUsuario, setTipoUsuario] = useState(
@@ -95,7 +138,7 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
     existente?.especialidade ?? "nenhum",
   );
 
-  // Certificações selecionadas e metadados do CertificadoBrigadista
+  // Certificações selecionadas e metadados
   const idsIniciais = existente?.certificados
     ? existente.certificados.map((c) => c.tipoCertificadoId)
     : tiposCertificados.slice(0, 2).map((t) => t.id);
@@ -106,10 +149,12 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
     existente?.certificados?.[0]?.emissor ?? "Corpo de Bombeiros",
   );
   const [dataEmissaoPadrao, setDataEmissaoPadrao] = useState(
-    existente?.certificados?.[0]?.dataEmissao ?? hojeIso(),
+    paraFormatoVisualData(existente?.certificados?.[0]?.dataEmissao ?? "") ||
+      hojeVisual(),
   );
   const [dataValidadePadrao, setDataValidadePadrao] = useState(
-    existente?.certificados?.[0]?.dataValidade ?? somarMesesIso(hojeIso(), 12),
+    paraFormatoVisualData(existente?.certificados?.[0]?.dataValidade ?? "") ||
+      somarMesesVisual(12),
   );
 
   const [errors, setErrors] = useState({});
@@ -148,32 +193,33 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
 
   async function handleSalvar() {
     const nextErrors = {};
-    const dataNascIso = normalizarDataIso(dataNascimento);
-    const emissaoIso = normalizarDataIso(dataEmissaoPadrao);
-    const validadeIso = normalizarDataIso(dataValidadePadrao);
+    const dataNascIso = normalizarParaIso(dataNascimento);
+    const emissaoIso = normalizarParaIso(dataEmissaoPadrao);
+    const validadeIso = normalizarParaIso(dataValidadePadrao);
+    const cpfDigitos = cpf.replace(/\D/g, "");
 
     if (!nome.trim()) nextErrors.nome = "Informe o nome completo";
     if (!email.trim()) nextErrors.email = "Informe o e-mail";
-    if (!cpf.trim()) nextErrors.cpf = "Informe o CPF";
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataNascIso)) {
-      nextErrors.dataNascimento =
-        "Use o formato AAAA-MM-DD ou DD/MM/AAAA (ex: 1995-08-20)";
+    if (!cpf.trim()) {
+      nextErrors.cpf = "Informe o CPF";
+    } else if (cpfDigitos.length !== 11) {
+      nextErrors.cpf = "CPF incompleto (deve conter 11 dígitos)";
     }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataNascIso)) {
+      nextErrors.dataNascimento = "Use o formato DD-MM-AAAA (ex: 20-08-1995)";
+    }
+
     if (certificadosSelecionadosIds.length > 0) {
       if (!emissorPadrao.trim()) {
         nextErrors.emissor = "Informe o órgão emissor dos certificados";
       }
       if (!/^\d{4}-\d{2}-\d{2}$/.test(emissaoIso)) {
-        nextErrors.dataEmissao = "Formato inválido (use AAAA-MM-DD)";
+        nextErrors.dataEmissao = "Formato inválido (use DD-MM-AAAA)";
       }
       if (!/^\d{4}-\d{2}-\d{2}$/.test(validadeIso)) {
-        nextErrors.dataValidade = "Formato inválido (use AAAA-MM-DD)";
+        nextErrors.dataValidade = "Formato inválido (use DD-MM-AAAA)";
       }
-    }
-
-    const cpfApenasDigitos = cpf.replace(/\D/g, "");
-    if (!existente && cpfApenasDigitos.length < 6) {
-      nextErrors.cpf = "O CPF deve conter ao menos 6 dígitos para criar o acesso";
     }
 
     setErrors(nextErrors);
@@ -196,7 +242,7 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
 
     const dadosUsuario = {
       nome: nome.trim(),
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       tipoUsuario,
       cpf: cpf.trim(),
       dataNascimento: dataNascIso,
@@ -213,11 +259,9 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
       if (existente) {
         await atualizarBrigadista(existente.id, dadosUsuario);
       } else {
-        // 1. Cria a conta de autenticação primeiro sem trocar a sessão atual do administrador
-        const senhaInicial = (cpf ? cpf.replace(/\D/g, "").slice(0, 6) : "");
-        await cadastrarUsuarioAuthSemLogin(email.trim(), senhaInicial);
-
-        // 2. Salva o registro no Firestore
+        // Cria autenticação primeiro (senha inicial = dígitos do CPF)
+        await cadastrarUsuarioAuthSemLogin(email.trim().toLowerCase(), cpfDigitos);
+        // Persiste dados no Firestore
         await adicionarBrigadista(dadosUsuario);
       }
       navigation.goBack();
@@ -298,32 +342,34 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>CPF</Text>
               <TextField
-                placeholder="000.000.000-00"
+                placeholder="111.111.111-11"
                 value={cpf}
                 onChangeText={(t) => {
-                  setCpf(t);
+                  setCpf(formatarMascaraCpf(t));
                   if (errors.cpf) {
                     setErrors((e) => ({ ...e, cpf: undefined }));
                   }
                 }}
                 error={errors.cpf}
                 keyboardType="numeric"
+                maxLength={14}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Data de nascimento (AAAA-MM-DD)</Text>
+              <Text style={styles.label}>Data de nascimento (DD-MM-AAAA)</Text>
               <TextField
-                placeholder="1995-08-20"
+                placeholder="20-08-1995"
                 value={dataNascimento}
                 onChangeText={(t) => {
-                  setDataNascimento(t);
+                  setDataNascimento(formatarMascaraData(t));
                   if (errors.dataNascimento) {
                     setErrors((e) => ({ ...e, dataNascimento: undefined }));
                   }
                 }}
                 error={errors.dataNascimento}
-                autoCapitalize="none"
+                keyboardType="numeric"
+                maxLength={10}
               />
             </View>
 
@@ -483,12 +529,12 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
 
                     <View style={styles.rowSelectors}>
                       <View style={[styles.fieldGroup, styles.colHalf]}>
-                        <Text style={styles.label}>Emissão (AAAA-MM-DD)</Text>
+                        <Text style={styles.label}>Emissão (DD-MM-AAAA)</Text>
                         <TextField
-                          placeholder="2026-10-22"
+                          placeholder="22-10-2026"
                           value={dataEmissaoPadrao}
                           onChangeText={(t) => {
-                            setDataEmissaoPadrao(t);
+                            setDataEmissaoPadrao(formatarMascaraData(t));
                             if (errors.dataEmissao) {
                               setErrors((e) => ({
                                 ...e,
@@ -497,17 +543,18 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
                             }
                           }}
                           error={errors.dataEmissao}
-                          autoCapitalize="none"
+                          keyboardType="numeric"
+                          maxLength={10}
                         />
                       </View>
 
                       <View style={[styles.fieldGroup, styles.colHalf]}>
-                        <Text style={styles.label}>Validade (AAAA-MM-DD)</Text>
+                        <Text style={styles.label}>Validade (DD-MM-AAAA)</Text>
                         <TextField
-                          placeholder="2027-10-22"
+                          placeholder="22-10-2027"
                           value={dataValidadePadrao}
                           onChangeText={(t) => {
-                            setDataValidadePadrao(t);
+                            setDataValidadePadrao(formatarMascaraData(t));
                             if (errors.dataValidade) {
                               setErrors((e) => ({
                                 ...e,
@@ -516,7 +563,8 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
                             }
                           }}
                           error={errors.dataValidade}
-                          autoCapitalize="none"
+                          keyboardType="numeric"
+                          maxLength={10}
                         />
                       </View>
                     </View>

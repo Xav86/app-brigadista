@@ -2,9 +2,12 @@ import {
   addDoc,
   collection,
   doc,
+  getDocs,
   onSnapshot,
+  query,
   Timestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 
 import {
@@ -51,6 +54,37 @@ function paraDate(valor: unknown): Date {
     if (!Number.isNaN(parsed.getTime())) return parsed;
   }
   return new Date();
+}
+
+export async function buscarUsuarioPorEmail(
+  email: string,
+): Promise<RegistroComId<Usuario> | null> {
+  const emailLimpo = email.trim().toLowerCase();
+  const q = query(
+    collection(db, COLECOES.USUARIOS),
+    where("email", "==", emailLimpo),
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const docSnap = snap.docs[0];
+  const raw = docSnap.data();
+  return {
+    id: docSnap.id,
+    nome: raw.nome ?? "",
+    email: raw.email ?? "",
+    tipoUsuario: raw.tipoUsuario === "admin" ? "admin" : "user",
+    cpf: raw.cpf ?? "",
+    dataNascimento: raw.dataNascimento ?? "",
+    sexo:
+      raw.sexo === "M" || raw.sexo === "F" || raw.sexo === "Outro"
+        ? raw.sexo
+        : "Outro",
+    isProfissional: Boolean(raw.isProfissional),
+    especialidade: raw.especialidade ?? "nenhum",
+    fcmTokens: Array.isArray(raw.fcmTokens) ? raw.fcmTokens : [],
+    certificados: Array.isArray(raw.certificados) ? raw.certificados : [],
+    criadoEm: paraDate(raw.criadoEm),
+  };
 }
 
 export async function adicionarUsuario(

@@ -12,13 +12,34 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 import { colors, fonts, spacing } from "../../theme";
-
 import Button from "../../components/Button";
 import TextField from "../../components/TextField";
+import { auth } from "../../services/firebase";
+import { buscarUsuarioPorEmail } from "../../services/firestore";
 
 const logo = require("../../assets/images/logo.png");
+
+function traduzirErroFirebase(codigo) {
+  switch (codigo) {
+    case "auth/invalid-credential":
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+      return "E-mail ou senha incorretos.";
+    case "auth/invalid-email":
+      return "O formato do e-mail é inválido.";
+    case "auth/user-disabled":
+      return "Este usuário foi desativado. Contate o administrador.";
+    case "auth/too-many-requests":
+      return "Muitas tentativas sem sucesso. Tente novamente mais tarde.";
+    case "auth/network-request-failed":
+      return "Falha de conexão. Verifique sua internet.";
+    default:
+      return "Ocorreu um erro ao entrar. Verifique seus dados e tente novamente.";
+  }
+}
 
 export default function LoginScreen({ onLogin }) {
   const [usuario, setUsuario] = useState("");
@@ -30,7 +51,7 @@ export default function LoginScreen({ onLogin }) {
   function validar() {
     const next = {};
 
-    if (!usuario.trim()) next.usuario = "Informe seu usuário";
+    if (!usuario.trim()) next.usuario = "Informe seu e-mail";
     if (!senha) next.senha = "Informe sua senha";
 
     setErrors(next);
@@ -38,15 +59,49 @@ export default function LoginScreen({ onLogin }) {
     return Object.keys(next).length === 0;
   }
 
-  function handleEntrar() {
+  async function handleEntrar() {
     if (!validar()) return;
-    onLogin("brigadista");
+
+    try {
+      setLoading(true);
+
+      const emailLimpo = usuario.trim().toLowerCase();
+      const senhaLimpa = senha.trim();
+
+      // 1. Autenticação no Firebase Auth
+      const credencial = await signInWithEmailAndPassword(
+        auth,
+        emailLimpo,
+        senhaLimpa,
+      );
+
+      // 2. Consulta no Firestore para recuperar o perfil e papel (role)
+      const perfil = await buscarUsuarioPorEmail(credencial.user.email || emailLimpo);
+
+      if (!perfil) {
+        Alert.alert(
+          "Perfil não localizado",
+          "Usuário autenticado, mas o cadastro não foi encontrado no sistema.",
+        );
+        return;
+      }
+
+      // 3. Define papel de acesso conforme tipoUsuario
+      const role = perfil.tipoUsuario === "admin" ? "admin" : "brigadista";
+      onLogin(role);
+    } catch (error) {
+      const msg = traduzirErroFirebase(error?.code);
+      Alert.alert("Não foi possível entrar", msg);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // TODO: biometria real ainda não existe; por enquanto este botão é o acesso de admin.
   function handleBiometria() {
-    if (!validar()) return;
-    onLogin("admin");
+    Alert.alert(
+      "Autenticação com biometria",
+      "O login biométrico ainda não foi implementado. Por favor, utilize seu e-mail e senha cadastrados.",
+    );
   }
 
   function handleAjuda() {
@@ -82,8 +137,8 @@ export default function LoginScreen({ onLogin }) {
 
           <View style={styles.form}>
             <TextField
-              icon="user"
-              placeholder="Usuário"
+              icon="mail"
+              placeholder="E-mail"
               value={usuario}
               onChangeText={(t) => {
                 setUsuario(t);
@@ -93,8 +148,9 @@ export default function LoginScreen({ onLogin }) {
               error={errors.usuario}
               autoCapitalize="none"
               autoCorrect={false}
-              autoComplete="username"
-              textContentType="username"
+              autoComplete="email"
+              keyboardType="email-address"
+              textContentType="emailAddress"
               returnKeyType="next"
               onSubmitEditing={() => senhaRef.current?.focus()}
             />
