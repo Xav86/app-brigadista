@@ -39,12 +39,6 @@ const OPCOES = [
     descricao: "Configure seus avisos",
     rota: "Notificacoes",
   },
-  {
-    id: "sobre",
-    icon: "info",
-    titulo: "Sobre o aplicativo",
-    descricao: "Versão 1.0.0",
-  },
 ];
 
 function emBreve() {

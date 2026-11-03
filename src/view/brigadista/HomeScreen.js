@@ -109,38 +109,6 @@ export default function InicioBrigadista({ navigation }) {
             </Card>
           </Pressable>
         </View>
-
-        <Card style={[styles.disponibilidade, styles.gapTop]}>
-          <View style={styles.simbolo}>
-            <Feather name="clock" size={18} color={colors.primary} />
-          </View>
-          <View style={styles.flex}>
-            <Text style={styles.cardLabel}>Disponibilidade aberta</Text>
-            <Text style={styles.metaText}>{disponibilidade.periodo}</Text>
-          </View>
-          {disponibilidade.aberta ? (
-            <StatusPill label="Aberta" tone="primary" />
-          ) : null}
-        </Card>
-
-        <Card style={[styles.gap, styles.gapTop]}>
-          <Text style={styles.cardLabel}>Quais dias você poderá servir?</Text>
-          <Text style={styles.body}>
-            Informe os dias em que estará disponível e ajude a organizar as
-            próximas escalas da brigada.
-          </Text>
-          <Button
-            title="Informar disponibilidade"
-            variant="soft"
-            rightIcon="arrow-right"
-            onPress={() =>
-              navigation.navigate("Agenda", {
-                screen: "SolicitarDisponibilidade",
-                initial: false,
-              })
-            }
-          />
-        </Card>
       </ScrollView>
     </SafeAreaView>
   );

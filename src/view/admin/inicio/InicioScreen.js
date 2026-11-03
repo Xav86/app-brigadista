@@ -179,21 +179,6 @@ export default function InicioScreen({ navigation }) {
         ) : (
           <Text style={styles.vazio}>Nenhum evento agendado.</Text>
         )}
-
-        <Text style={styles.sectionTitle}>Ações rápidas</Text>
-        <View style={styles.lista}>
-          <Button
-            title="Agendamento manual"
-            variant="soft"
-            rightIcon="arrow-right"
-            onPress={() => navigation.navigate("AgendamentoManual")}
-          />
-          <Button
-            title="Criar evento"
-            rightIcon="arrow-right"
-            onPress={() => abrirFormularioEvento()}
-          />
-        </View>
       </ScrollView>
     </SafeAreaView>
   );

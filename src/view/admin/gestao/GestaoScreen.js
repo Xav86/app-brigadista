@@ -82,7 +82,9 @@ export default function GestaoScreen({ navigation, onLogout }) {
                 accessibilityRole="button"
               >
                 {({ pressed }) => (
-                  <Card style={[styles.itemCard, pressed && styles.itemPressed]}>
+                  <Card
+                    style={[styles.itemCard, pressed && styles.itemPressed]}
+                  >
                     <Text style={styles.itemLabel}>{item.label}</Text>
                     <Feather
                       name="chevron-right"
@@ -98,17 +100,12 @@ export default function GestaoScreen({ navigation, onLogout }) {
 
         <Pressable
           onPress={handleSair}
-          accessibilityRole="button"
           style={({ pressed }) => [
             styles.sairBtn,
             pressed && styles.sairBtnPressed,
           ]}
         >
-          <Feather
-            name="corner-down-right"
-            size={16}
-            color={colors.primary}
-          />
+          <Feather name="corner-down-right" size={16} color={colors.primary} />
           <Text style={styles.sairLabel}>Sair da conta</Text>
         </Pressable>
       </ScrollView>
@@ -125,7 +122,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: spacing.screen,
     paddingBottom: 24,
-    justifyContent: "space-between",
     gap: 24,
   },
   top: {
