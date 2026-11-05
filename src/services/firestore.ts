@@ -6,6 +6,7 @@ import {
   getDocs,
   onSnapshot,
   query,
+  setDoc,
   Timestamp,
   updateDoc,
   where,
@@ -31,6 +32,7 @@ export const COLECOES = {
   TIPOS_CERTIFICADOS: "tipos_certificados",
   EVENTOS: "eventos",
   COMPETENCIAS: "competencias",
+  CONFIGURACOES: "configuracoes",
   ESCALAS: "escalas",
 } as const;
 
@@ -281,6 +283,72 @@ export function escutarEventos(
         };
       });
       onUpdate(lista);
+    },
+    (err) => {
+      if (onError) onError(err);
+    },
+  );
+}
+
+// Cada competência é salva com o próprio mês como id (ex.: "competencias/2026-11"),
+// assim o admin pode abrir ou fechar o mesmo mês quantas vezes quiser sem duplicar.
+export async function salvarCompetencia(
+  dados: Competencia,
+): Promise<RegistroComId<Competencia>> {
+  const validado = validarCompetencia(dados);
+  await setDoc(doc(db, COLECOES.COMPETENCIAS, validado.mesReferencia), {
+    ...validado,
+    dataLimiteEscolha: Timestamp.fromDate(validado.dataLimiteEscolha),
+  });
+  return { id: validado.mesReferencia, ...validado };
+}
+
+export function escutarCompetencia(
+  mesReferencia: string,
+  onUpdate: (competencia: RegistroComId<Competencia> | null) => void,
+  onError?: (erro: Error) => void,
+) {
+  return onSnapshot(
+    doc(db, COLECOES.COMPETENCIAS, mesReferencia),
+    (docSnap) => {
+      if (!docSnap.exists()) {
+        onUpdate(null);
+        return;
+      }
+      const raw = docSnap.data();
+      onUpdate({
+        id: docSnap.id,
+        mesReferencia: raw.mesReferencia ?? mesReferencia,
+        titulo: raw.titulo ?? "",
+        agendamentoLiberado: Boolean(raw.agendamentoLiberado),
+        dataLimiteEscolha: paraDate(raw.dataLimiteEscolha),
+      });
+    },
+    (err) => {
+      if (onError) onError(err);
+    },
+  );
+}
+
+// Documento único "configuracoes/agendamento" com o mês que está aberto para os brigadistas.
+export async function salvarCompetenciaAtual(mesReferencia: string) {
+  await setDoc(
+    doc(db, COLECOES.CONFIGURACOES, "agendamento"),
+    { competenciaAtual: mesReferencia },
+    { merge: true },
+  );
+}
+
+export function escutarCompetenciaAtual(
+  onUpdate: (mesReferencia: string | null) => void,
+  onError?: (erro: Error) => void,
+) {
+  return onSnapshot(
+    doc(db, COLECOES.CONFIGURACOES, "agendamento"),
+    (docSnap) => {
+      onUpdate(
+        docSnap.exists() ? (docSnap.data().competenciaAtual ?? null) : null,
+      );
     },
     (err) => {
       if (onError) onError(err);

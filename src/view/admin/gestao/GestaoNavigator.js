@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import BrigadistasScreen from "./BrigadistasScreen";
+import ConfiguracoesScreen from "./ConfiguracoesScreen";
 import DetalhesBrigadistaScreen from "./DetalhesBrigadistaScreen";
 import GestaoScreen from "./GestaoScreen";
 import NovoBrigadistaScreen from "./NovoBrigadistaScreen";
@@ -22,6 +23,7 @@ export default function GestaoNavigator({ onLogout }) {
           name="DetalhesBrigadista"
           component={DetalhesBrigadistaScreen}
         />
+        <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
         <Stack.Screen
           name="InformacoesPessoais"
           component={InformacoesPessoaisScreen}

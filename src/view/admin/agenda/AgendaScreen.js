@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, fonts, spacing } from "../../../theme";
@@ -18,11 +18,36 @@ export default function AgendaScreen({ navigation }) {
   );
   const diasComEvento = useMemo(() => Object.keys(porDia), [porDia]);
 
+  // As telas de pedidos e de agendamento manual ficam na aba Início.
+  function abrirNoInicio(tela) {
+    navigation.getParent()?.navigate("Home", { screen: tela });
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Agenda</Text>
         <Text style={styles.lead}>Toque em um dia para ver os eventos.</Text>
+      </View>
+
+      <View style={styles.chips}>
+        <View style={[styles.chip, styles.chipAtivo]}>
+          <Text style={[styles.chipLabel, styles.chipLabelAtivo]}>Agenda</Text>
+        </View>
+        <Pressable
+          style={styles.chip}
+          onPress={() => abrirNoInicio("Solicitacoes")}
+        >
+          <Text style={styles.chipLabel}>Meus pedidos</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.chip, styles.chipDestaque]}
+          onPress={() => abrirNoInicio("AgendamentoManual")}
+        >
+          <Text style={[styles.chipLabel, styles.chipLabelAtivo]}>
+            Agendamento manual
+          </Text>
+        </Pressable>
       </View>
 
       <View style={styles.calendario}>
@@ -59,6 +84,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.textMuted,
+  },
+  chips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: spacing.screen,
+    paddingTop: 14,
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: colors.neutralSoft,
+  },
+  chipAtivo: {
+    backgroundColor: colors.primarySoft,
+  },
+  chipDestaque: {
+    backgroundColor: colors.primaryTint,
+  },
+  chipLabel: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  chipLabelAtivo: {
+    color: colors.primary,
   },
   calendario: {
     flex: 1,

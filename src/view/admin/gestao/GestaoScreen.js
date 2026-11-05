@@ -48,7 +48,7 @@ export default function GestaoScreen({ navigation, onLogout }) {
     {
       key: "configuracoes",
       label: "Configurações",
-      onPress: emBreve,
+      onPress: () => navigation.navigate("Configuracoes"),
     },
   ];
 
