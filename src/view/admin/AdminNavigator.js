@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import AppTabBar from "../../components/AppTabBar";
-import AgendaScreen from "./AgendaScreen";
+import AgendaNavigator from "./agenda/AgendaNavigator";
 import EventosNavigator from "./eventos/EventosNavigator";
 import GestaoNavigator from "./gestao/GestaoNavigator";
 import InicioNavigator from "./inicio/InicioNavigator";
@@ -30,7 +30,7 @@ export default function AdminNavigator({ onLogout }) {
         />
         <Tab.Screen
           name="Agenda"
-          component={AgendaScreen}
+          component={AgendaNavigator}
           options={{ title: "Agenda" }}
         />
         <Tab.Screen

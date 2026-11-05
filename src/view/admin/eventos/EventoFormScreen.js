@@ -49,7 +49,9 @@ export default function EventoFormScreen({ navigation, route }) {
   const eventoId = route.params?.eventoId;
   const existente = eventoId ? buscarEvento(eventoId) : null;
 
-  const [campos, setCampos] = useState(() => camposIniciais(existente));
+  const [campos, setCampos] = useState(() =>
+    camposIniciais(existente, route.params?.dataInicial),
+  );
   const [erros, setErros] = useState({});
 
   // A tela de recorrência devolve a regra escolhida pelos params desta rota.

@@ -20,13 +20,13 @@ export const REGRA_SEM_RECORRENCIA = {
   terminaEm: null, // ISO "AAAA-MM-DD" para poder ir e voltar pelos params da navegação
 };
 
-export function camposIniciais(evento) {
+export function camposIniciais(evento, dataInicial) {
   if (!evento) {
     return {
       nome: "",
       descricao: "",
       local: "",
-      data: "",
+      data: dataInicial ? formatDateBR(parseIsoDate(dataInicial)) : "",
       horaInicio: "",
       horaFim: "",
       certificacoes: [],

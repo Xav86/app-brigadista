@@ -4,6 +4,7 @@ import {
   formatTime,
   getWeekdayName,
   startOfDay,
+  toIsoDate,
 } from "./calendar";
 
 export const RECORRENCIA_LABELS = {
@@ -66,6 +67,28 @@ export function gerarOcorrencias(evento, { aPartirDe, quantidade = 10 } = {}) {
   }
 
   return datas;
+}
+
+// Ocorrências do evento que caem dentro do mês informado (mes: 0-11).
+export function ocorrenciasNoMes(evento, ano, mes) {
+  const inicioMes = new Date(ano, mes, 1);
+  const fimMes = new Date(ano, mes + 1, 0);
+  return gerarOcorrencias(evento, { aPartirDe: inicioMes, quantidade: 45 }).filter(
+    (data) => data <= fimMes,
+  );
+}
+
+// Agrupa as ocorrências de todos os eventos do mês por dia (chave = data ISO).
+export function eventosPorDia(eventos, ano, mes) {
+  const mapa = {};
+  for (const evento of eventos) {
+    for (const data of ocorrenciasNoMes(evento, ano, mes)) {
+      const iso = toIsoDate(data);
+      if (!mapa[iso]) mapa[iso] = [];
+      mapa[iso].push(evento);
+    }
+  }
+  return mapa;
 }
 
 export function proximaOcorrencia(evento, agora = new Date()) {
