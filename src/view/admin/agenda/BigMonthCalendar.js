@@ -126,8 +126,8 @@ const styles = StyleSheet.create({
   },
   dia: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: colors.border,
+    borderWidth: .5,
   },
   diaMiolo: {
     width: 42,
