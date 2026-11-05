@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   onSnapshot,
@@ -21,6 +22,7 @@ import {
   validarEvento,
   validarTipoCertificado,
   validarUsuario,
+  VALORES_RECORRENCIA,
 } from "../models";
 import { db } from "./firebase";
 
@@ -123,17 +125,38 @@ export async function adicionarTipoCertificado(
   return { id: ref.id, ...validado };
 }
 
+// O Firestore guarda datas como Timestamp, então convertemos antes de salvar.
+function eventoParaBanco(evento: Evento) {
+  return {
+    ...evento,
+    dataInicio: Timestamp.fromDate(evento.dataInicio),
+    dataFim: Timestamp.fromDate(evento.dataFim),
+    terminaEm: evento.terminaEm ? Timestamp.fromDate(evento.terminaEm) : null,
+  };
+}
+
 export async function adicionarEvento(
   dados: Evento,
 ): Promise<RegistroComId<Evento>> {
   const validado = validarEvento(dados);
-  const payload = {
-    ...validado,
-    dataInicio: Timestamp.fromDate(validado.dataInicio),
-    dataFim: Timestamp.fromDate(validado.dataFim),
-  };
-  const ref = await addDoc(collection(db, COLECOES.EVENTOS), payload);
+  const ref = await addDoc(
+    collection(db, COLECOES.EVENTOS),
+    eventoParaBanco(validado),
+  );
   return { id: ref.id, ...validado };
+}
+
+export async function atualizarEvento(
+  id: string,
+  dados: Evento,
+): Promise<RegistroComId<Evento>> {
+  const validado = validarEvento(dados);
+  await updateDoc(doc(db, COLECOES.EVENTOS, id), eventoParaBanco(validado));
+  return { id, ...validado };
+}
+
+export async function excluirEvento(id: string): Promise<void> {
+  await deleteDoc(doc(db, COLECOES.EVENTOS, id));
 }
 
 export async function adicionarCompetencia(
@@ -221,6 +244,42 @@ export function escutarTiposCertificados(
           };
         },
       );
+      onUpdate(lista);
+    },
+    (err) => {
+      if (onError) onError(err);
+    },
+  );
+}
+
+export function escutarEventos(
+  onUpdate: (eventos: RegistroComId<Evento>[]) => void,
+  onError?: (erro: Error) => void,
+) {
+  return onSnapshot(
+    collection(db, COLECOES.EVENTOS),
+    (snapshot) => {
+      const lista: RegistroComId<Evento>[] = snapshot.docs.map((docSnap) => {
+        const raw = docSnap.data();
+        return {
+          id: docSnap.id,
+          nome: raw.nome ?? "",
+          descricao: raw.descricao ?? "",
+          local: raw.local ?? "",
+          dataInicio: paraDate(raw.dataInicio),
+          dataFim: paraDate(raw.dataFim),
+          tipo: raw.tipo === "recorrente" ? "recorrente" : "esporadico",
+          recorrencia: VALORES_RECORRENCIA.includes(raw.recorrencia)
+            ? raw.recorrencia
+            : "nenhuma",
+          diasSemana: Array.isArray(raw.diasSemana) ? raw.diasSemana : [],
+          terminaEm: raw.terminaEm ? paraDate(raw.terminaEm) : null,
+          certificacoes: Array.isArray(raw.certificacoes)
+            ? raw.certificacoes
+            : [],
+          notificacoesAtivas: raw.notificacoesAtivas !== false,
+        };
+      });
       onUpdate(lista);
     },
     (err) => {

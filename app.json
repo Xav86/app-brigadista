@@ -29,6 +29,12 @@
           "imageWidth": 160,
           "backgroundColor": "#FFFFFF"
         }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Permitir que o Brigadista use o Face ID para entrar no app."
+        }
       ]
     ],
     "scheme": "brigadista"

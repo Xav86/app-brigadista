@@ -46,11 +46,15 @@ export type Recorrencia =
 
 export interface Evento {
   nome: string;
+  descricao: string;
   local: string;
   dataInicio: Date; // Timestamp do Firebase
   dataFim: Date; // Timestamp do Firebase
   tipo: TipoEvento;
   recorrencia: Recorrencia;
+  diasSemana: number[]; // Só na recorrência semanal: 0 = domingo ... 6 = sábado
+  terminaEm: Date | null; // Último dia da recorrência (null = não termina)
+  certificacoes: string[]; // Ids dos tipos de certificado exigidos
   notificacoesAtivas: boolean;
 }
 
@@ -282,14 +286,28 @@ export function validarEvento(dados: unknown): Evento {
   assertEnum(ev.tipo, VALORES_TIPO_EVENTO, "tipo");
   assertEnum(ev.recorrencia, VALORES_RECORRENCIA, "recorrencia");
   assertBooleano(ev.notificacoesAtivas, "notificacoesAtivas");
+  if (ev.terminaEm != null) assertDataValida(ev.terminaEm, "terminaEm");
+  if (ev.dataFim < ev.dataInicio) {
+    throw new Error('O campo "dataFim" não pode ser antes de "dataInicio".');
+  }
+
+  const diasSemana = Array.isArray(ev.diasSemana) ? ev.diasSemana : [];
+  if (diasSemana.some((dia) => typeof dia !== "number" || dia < 0 || dia > 6)) {
+    throw new Error('O campo "diasSemana" deve ter números de 0 a 6.');
+  }
+  const certificacoes = Array.isArray(ev.certificacoes) ? ev.certificacoes : [];
 
   return {
     nome: ev.nome.trim(),
+    descricao: typeof ev.descricao === "string" ? ev.descricao.trim() : "",
     local: ev.local.trim(),
     dataInicio: ev.dataInicio,
     dataFim: ev.dataFim,
     tipo: ev.tipo,
     recorrencia: ev.recorrencia,
+    diasSemana,
+    terminaEm: ev.terminaEm ?? null,
+    certificacoes: certificacoes.map(String),
     notificacoesAtivas: ev.notificacoesAtivas,
   };
 }

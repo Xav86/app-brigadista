@@ -34,6 +34,15 @@ import {
   validarFormularioEvento,
 } from "./formularioEvento";
 
+// Alert.alert simples não aparece no Expo Web, então lá usamos o alert do navegador.
+function avisar(titulo, mensagem) {
+  if (Platform.OS === "web") {
+    window.alert(`${titulo}\n${mensagem}`);
+    return;
+  }
+  Alert.alert(titulo, mensagem);
+}
+
 function Campo({ label, children, style }) {
   return (
     <View style={[styles.campo, style]}>
@@ -47,12 +56,14 @@ export default function EventoFormScreen({ navigation, route }) {
   const { buscarEvento, salvarEvento, excluirEvento } = useAdminDados();
 
   const eventoId = route.params?.eventoId;
-  const existente = eventoId ? buscarEvento(eventoId) : null;
+  const editando = Boolean(eventoId);
+  const existente = editando ? buscarEvento(eventoId) : null;
 
-  const [campos, setCampos] = useState(() =>
+  const [campos, setCampos] = useState(
     camposIniciais(existente, route.params?.dataInicial),
   );
   const [erros, setErros] = useState({});
+  const [salvando, setSalvando] = useState(false);
 
   // A tela de recorrência devolve a regra escolhida pelos params desta rota.
   const regraRecebida = route.params?.regraRecorrencia;
@@ -108,24 +119,36 @@ export default function EventoFormScreen({ navigation, route }) {
     return `${resumo} • até ${formatDateBR(parseIsoDate(campos.regra.terminaEm))}`;
   }
 
-  function handleSalvar() {
-    const resultado = validarFormularioEvento(campos, {
-      editando: Boolean(existente),
-    });
+  async function handleSalvar() {
+    const resultado = validarFormularioEvento(campos, { editando });
     setErros(resultado.erros);
     if (!resultado.evento) return;
 
-    salvarEvento(existente?.id, resultado.evento);
-    navigation.goBack();
+    try {
+      setSalvando(true);
+      await salvarEvento(eventoId, resultado.evento);
+      navigation.goBack();
+    } catch (erro) {
+      avisar("Não foi possível salvar", erro.message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function confirmarExclusao() {
+    try {
+      setSalvando(true);
+      await excluirEvento(eventoId);
+      navigation.goBack();
+    } catch (erro) {
+      avisar("Não foi possível excluir", erro.message);
+    } finally {
+      setSalvando(false);
+    }
   }
 
   function handleExcluir() {
-    const mensagem = `Deseja excluir "${existente.nome}"? As escalas deste evento também serão removidas.`;
-
-    function confirmarExclusao() {
-      excluirEvento(existente.id);
-      navigation.goBack();
-    }
+    const mensagem = `Deseja excluir "${campos.nome}"? As escalas deste evento também serão removidas.`;
 
     // Alert.alert com botões não funciona no Expo Web (react-native-web ignora os callbacks).
     if (Platform.OS === "web") {
@@ -152,7 +175,7 @@ export default function EventoFormScreen({ navigation, route }) {
           keyboardShouldPersistTaps="handled"
         >
           <ScreenHeader
-            title={existente ? "Editar evento" : "Novo evento"}
+            title={editando ? "Editar evento" : "Novo evento"}
             lead="Cadastre os dados e requisitos do evento."
             onBack={() => navigation.goBack()}
           />
@@ -310,17 +333,19 @@ export default function EventoFormScreen({ navigation, route }) {
 
           <View style={styles.acoes}>
             <Button
-              title={existente ? "Salvar alterações" : "Criar evento"}
+              title={editando ? "Salvar alterações" : "Criar evento"}
               onPress={handleSalvar}
+              loading={salvando}
             />
             <Button
               title="Cancelar"
               variant="outline"
               onPress={() => navigation.goBack()}
             />
-            {existente ? (
+            {editando ? (
               <Pressable
                 onPress={handleExcluir}
+                disabled={salvando}
                 style={styles.excluir}
                 accessibilityRole="button"
                 hitSlop={8}

@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as LocalAuthentication from "expo-local-authentication";
 import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
@@ -32,6 +33,7 @@ export default function LoginScreen({ onLogin }) {
   const [erroLoginGeral, setErroLoginGeral] = useState("");
   const [loading, setLoading] = useState(false);
   const [redefinindo, setRedefinindo] = useState(false);
+  const [entrandoBiometria, setEntrandoBiometria] = useState(false);
   const senhaRef = useRef(null);
 
   function validar() {
@@ -42,6 +44,21 @@ export default function LoginScreen({ onLogin }) {
 
     setErrors(next);
     return Object.keys(next).length === 0;
+  }
+
+  // Busca o cadastro do usuário no Firestore e define o papel de acesso conforme tipoUsuario.
+  async function entrarComPerfil(email) {
+    const perfil = await buscarUsuarioPorEmail(email);
+
+    if (!perfil) {
+      setErroLoginGeral(
+        "Usuário autenticado, mas o cadastro não foi encontrado no sistema.",
+      );
+      return;
+    }
+
+    const role = perfil.tipoUsuario === "admin" ? "admin" : "brigadista";
+    onLogin(role);
   }
 
   async function handleEntrar() {
@@ -61,21 +78,8 @@ export default function LoginScreen({ onLogin }) {
         senhaLimpa,
       );
 
-      // 2. Consulta no Firestore para recuperar o perfil e papel (role)
-      const perfil = await buscarUsuarioPorEmail(
-        credencial.user.email || emailLimpo,
-      );
-
-      if (!perfil) {
-        setErroLoginGeral(
-          "Usuário autenticado, mas o cadastro não foi encontrado no sistema.",
-        );
-        return;
-      }
-
-      // 3. Define papel de acesso conforme tipoUsuario
-      const role = perfil.tipoUsuario === "admin" ? "admin" : "brigadista";
-      onLogin(role);
+      // 2. Consulta o perfil no Firestore e entra com o papel (role) dele
+      await entrarComPerfil(credencial.user.email || emailLimpo);
     } catch (error) {
       if (
         error?.code === "auth/invalid-credential" ||
@@ -135,11 +139,51 @@ export default function LoginScreen({ onLogin }) {
     }
   }
 
-  function handleBiometria() {
-    Alert.alert(
-      "Autenticação com biometria",
-      "O login biométrico ainda não foi implementado. Por favor, utilize seu e-mail e senha cadastrados.",
-    );
+  // A biometria reaproveita a última sessão do Firebase salva no aparelho:
+  // o usuário precisa ter entrado uma vez com e-mail e senha antes.
+  async function handleBiometria() {
+    setErroLoginGeral("");
+
+    if (Platform.OS === "web") {
+      setErroLoginGeral("O login com biometria só funciona no celular.");
+      return;
+    }
+
+    try {
+      setEntrandoBiometria(true);
+
+      const temSensor = await LocalAuthentication.hasHardwareAsync();
+      const temBiometriaCadastrada = await LocalAuthentication.isEnrolledAsync();
+      if (!temSensor || !temBiometriaCadastrada) {
+        setErroLoginGeral(
+          "Este aparelho não tem digital ou reconhecimento facial cadastrado.",
+        );
+        return;
+      }
+
+      await auth.authStateReady();
+      const usuarioSalvo = auth.currentUser;
+      if (!usuarioSalvo) {
+        setErroLoginGeral(
+          "Entre uma vez com e-mail e senha para ativar a biometria neste aparelho.",
+        );
+        return;
+      }
+
+      const resultado = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Entrar no Brigadista",
+        cancelLabel: "Cancelar",
+      });
+      if (!resultado.success) return;
+
+      await entrarComPerfil(usuarioSalvo.email);
+    } catch (error) {
+      setErroLoginGeral(
+        "Não foi possível entrar com biometria. Use seu e-mail e senha.",
+      );
+    } finally {
+      setEntrandoBiometria(false);
+    }
   }
 
   function handleAjuda() {
@@ -253,6 +297,7 @@ export default function LoginScreen({ onLogin }) {
               leftIcon="fingerprint"
               leftIconFamily={MaterialCommunityIcons}
               onPress={handleBiometria}
+              loading={entrandoBiometria}
             />
           </View>
 

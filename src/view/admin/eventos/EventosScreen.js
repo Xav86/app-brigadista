@@ -1,6 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "../../../components/Button";
@@ -31,7 +37,7 @@ const FILTROS = [
 ];
 
 function normalizar(texto) {
-  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return texto.toLowerCase();
 }
 
 // Eventos ativos primeiro (pela próxima data), depois os encerrados (mais recentes antes).
@@ -49,7 +55,8 @@ function descreverEquipe(quantidade, evento) {
 }
 
 export default function EventosScreen({ navigation }) {
-  const { eventos, escalasDoEvento } = useAdminDados();
+  const { eventos, carregandoEventos, erroEventos, escalasDoEvento } =
+    useAdminDados();
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState("todos");
 
@@ -111,7 +118,11 @@ export default function EventosScreen({ navigation }) {
           </Text>
         </View>
 
-        {itens.length ? (
+        {carregandoEventos ? (
+          <ActivityIndicator color={colors.primary} style={styles.carregando} />
+        ) : erroEventos ? (
+          <Text style={styles.vazioTexto}>{erroEventos}</Text>
+        ) : itens.length ? (
           <View style={styles.lista}>
             {itens.map(({ evento, status, data, escalados }) => {
               const [dia, mes] = formatShortDate(data).split(" ");
@@ -199,6 +210,9 @@ const styles = StyleSheet.create({
   },
   lista: {
     gap: 10,
+  },
+  carregando: {
+    paddingVertical: 40,
   },
   vazio: {
     alignItems: "center",

@@ -1,21 +1,44 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
+import {
+  adicionarEvento,
+  atualizarEvento,
+  escutarEventos,
+  excluirEvento as excluirEventoNoBanco,
+} from "../../services/firestore";
 import {
   ADMIN_EXEMPLO,
   BRIGADISTAS_EXEMPLO,
-  ESCALAS_EXEMPLO,
-  EVENTOS_EXEMPLO,
   SOLICITACOES_EXEMPLO,
 } from "./dadosExemplo";
 
 // Estado compartilhado entre as abas do administrador (Início, Eventos, Agenda).
-// Por enquanto fica só em memória, com os dados de exemplo de dadosExemplo.js.
+// Os eventos vêm do Firestore; escalas e solicitações ainda ficam em memória,
+// com os dados de exemplo de dadosExemplo.js.
 const AdminDadosContext = createContext(null);
 
 export function AdminDadosProvider({ children }) {
-  const [eventos, setEventos] = useState(EVENTOS_EXEMPLO);
-  const [escalas, setEscalas] = useState(ESCALAS_EXEMPLO);
+  const [eventos, setEventos] = useState([]);
+  const [carregandoEventos, setCarregandoEventos] = useState(true);
+  const [erroEventos, setErroEventos] = useState(null);
+  const [escalas, setEscalas] = useState([]);
   const [solicitacoes, setSolicitacoes] = useState(SOLICITACOES_EXEMPLO);
+
+  // Escuta a coleção "eventos": qualquer cadastro, edição ou exclusão já atualiza as telas.
+  useEffect(() => {
+    const pararDeEscutar = escutarEventos(
+      (lista) => {
+        setEventos(lista);
+        setErroEventos(null);
+        setCarregandoEventos(false);
+      },
+      () => {
+        setErroEventos("Não foi possível carregar os eventos.");
+        setCarregandoEventos(false);
+      },
+    );
+    return pararDeEscutar;
+  }, []);
 
   function buscarEvento(id) {
     return eventos.find((evento) => evento.id === id);
@@ -29,20 +52,17 @@ export function AdminDadosProvider({ children }) {
     return escalas.filter((item) => item.eventoId === eventoId);
   }
 
-  // Cria o evento quando não há `id`; caso contrário, atualiza o existente.
-  function salvarEvento(id, dados) {
+  // Cria o evento no Firestore quando não há `id`; caso contrário, atualiza o existente.
+  async function salvarEvento(id, dados) {
     if (!id) {
-      const novo = { ...dados, id: `e${Date.now()}`, notificacoesAtivas: true };
-      setEventos((atuais) => [...atuais, novo]);
-      return novo;
+      return adicionarEvento({ ...dados, notificacoesAtivas: true });
     }
 
-    setEventos((atuais) =>
-      atuais.map((evento) =>
-        evento.id === id ? { ...evento, ...dados } : evento,
-      ),
-    );
-    return { ...buscarEvento(id), ...dados };
+    const existente = buscarEvento(id);
+    return atualizarEvento(id, {
+      notificacoesAtivas: existente?.notificacoesAtivas ?? true,
+      ...dados,
+    });
   }
 
   // Escala os brigadistas no evento para o dia informado (agendamento manual do admin).
@@ -70,9 +90,9 @@ export function AdminDadosProvider({ children }) {
     );
   }
 
-  // Remove o evento e as escalas ligadas a ele.
-  function excluirEvento(id) {
-    setEventos((atuais) => atuais.filter((evento) => evento.id !== id));
+  // Remove o evento do Firestore e as escalas ligadas a ele.
+  async function excluirEvento(id) {
+    await excluirEventoNoBanco(id);
     setEscalas((atuais) => atuais.filter((item) => item.eventoId !== id));
   }
 
@@ -82,6 +102,8 @@ export function AdminDadosProvider({ children }) {
         admin: ADMIN_EXEMPLO,
         brigadistas: BRIGADISTAS_EXEMPLO,
         eventos,
+        carregandoEventos,
+        erroEventos,
         escalas,
         solicitacoes,
         buscarEvento,

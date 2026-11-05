@@ -36,7 +36,7 @@ Run lint and typecheck before declaring any task done.
 
 - Use **React Navigation** (`@react-navigation/native` + `@react-navigation/bottom-tabs`; `@react-navigation/native-stack` for a nested multi-step flow inside a tab, e.g. `brigadista/agenda/AgendaNavigator.js`).
 - `src/view/App.js` only loads fonts/splash and picks which top-level navigator to render based on `role` (`null` → `LoginScreen`, `'brigadista'` → `BrigadistaNavigator`, `'admin'` → `AdminNavigator`). It does not define tabs itself — each role's `<Role>Navigator.js` owns its own `Tab.Navigator`.
-- There is no real auth yet: `LoginScreen` calls `onLogin(role)` directly. Today, the "Entrar" button maps to `'brigadista'` and "Entrar com biometria" is a stand-in for `'admin'` access (both just validate usuário/senha) — replace this once real authentication/roles exist.
+- `LoginScreen` authenticates with Firebase Auth (e-mail/senha) and reads `tipoUsuario` from the `usuarios` collection to call `onLogin(role)`. On native, the Firebase session is persisted with AsyncStorage (`src/services/firebase.js`); "Entrar com biometria" uses `expo-local-authentication` to reuse that saved session.
 - Screens receive `navigation` as a prop; use `navigation.navigate('ScreenName')` to move between tabs within the same role's navigator (screen names are the ones given to `Tab.Screen` in that role's `<Role>Navigator.js`).
 - This project does **not** use Expo Router — `expo-router` is not a dependency. Don't import from it.
 - Docs: https://reactnavigation.org/docs/getting-started
