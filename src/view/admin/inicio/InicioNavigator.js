@@ -2,7 +2,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import AgendamentoManualScreen from "./AgendamentoManualScreen";
 import InicioScreen from "./InicioScreen";
-import SolicitacoesScreen from "./SolicitacoesScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -14,7 +13,6 @@ export default function InicioNavigator() {
         name="AgendamentoManual"
         component={AgendamentoManualScreen}
       />
-      <Stack.Screen name="Solicitacoes" component={SolicitacoesScreen} />
     </Stack.Navigator>
   );
 }

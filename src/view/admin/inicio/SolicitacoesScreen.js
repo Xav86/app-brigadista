@@ -198,7 +198,7 @@ function RecusarModal({ pedidos, onCancelar, onConfirmar }) {
   );
 }
 
-export default function SolicitacoesScreen({ navigation }) {
+export default function SolicitacoesScreen() {
   const { solicitacoes, buscarBrigadista, responderSolicitacoes } =
     useAdminDados();
   const [filtro, setFiltro] = useState("pendente");
@@ -249,7 +249,6 @@ export default function SolicitacoesScreen({ navigation }) {
         <ScreenHeader
           title="Solicitações"
           lead="Analise as disponibilidades enviadas pelos brigadistas."
-          onBack={() => navigation.goBack()}
         />
 
         <FilterChips

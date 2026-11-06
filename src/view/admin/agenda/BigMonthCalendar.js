@@ -1,3 +1,4 @@
+import { Feather } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts } from "../../../theme";
@@ -16,7 +17,7 @@ export default function BigMonthCalendar({
   mes,
   onMesAnterior,
   onProximoMes,
-  diasComEvento = [],
+  contagemPorDia = {}, // { "2026-11-06": 2, ... } — quantidade de eventos por dia
   onDiaPress,
 }) {
   const semanas = getMonthWeeks(ano, mes);
@@ -47,29 +48,44 @@ export default function BigMonthCalendar({
           <View key={indice} style={styles.semana}>
             {semana.map(({ data, noMesAtual }) => {
               const iso = toIsoDate(data);
-              const temEvento = diasComEvento.includes(iso);
+              const quantidade = contagemPorDia[iso] ?? 0;
+              const temEvento = quantidade > 0;
               const hoje = iso === hojeIso;
 
               return (
                 <Pressable
                   key={iso}
-                  style={styles.dia}
+                  style={[
+                    styles.dia,
+                    temEvento && styles.diaComEvento,
+                    temEvento && !noMesAtual && styles.diaComEventoFora,
+                  ]}
                   onPress={() => onDiaPress(iso)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Ver eventos do dia ${data.getDate()}`}
+                  accessibilityLabel={
+                    temEvento
+                      ? `Dia ${data.getDate()}, ${quantidade} ${quantidade === 1 ? "evento" : "eventos"}`
+                      : `Ver eventos do dia ${data.getDate()}`
+                  }
                 >
                   <View style={[styles.diaMiolo, hoje && styles.diaHoje]}>
                     <Text
                       style={[
                         styles.diaTexto,
                         !noMesAtual && styles.diaTextoFora,
+                        temEvento && styles.diaTextoComEvento,
                         hoje && styles.diaTextoHoje,
                       ]}
                     >
                       {data.getDate()}
                     </Text>
-                    {temEvento ? <View style={styles.ponto} /> : null}
                   </View>
+                  {temEvento ? (
+                    <View style={styles.selo}>
+                      <Feather name="calendar" size={10} color={colors.background} />
+                      <Text style={styles.seloTexto}>{quantidade}</Text>
+                    </View>
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -126,19 +142,29 @@ const styles = StyleSheet.create({
   },
   dia: {
     flex: 1,
+    alignItems: "center",
+    paddingTop: 6,
+    gap: 6,
     borderColor: colors.border,
-    borderWidth: .5,
+    borderWidth: 0.5,
+  },
+  // Dia com evento: célula inteira tingida, para ser achada no meio da grade.
+  diaComEvento: {
+    backgroundColor: colors.primarySoft,
+  },
+  diaComEventoFora: {
+    opacity: 0.6,
   },
   diaMiolo: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    gap: 3,
   },
+  // Hoje: círculo cheio, para não se confundir com a célula tingida.
   diaHoje: {
-    backgroundColor: colors.primarySoft,
+    backgroundColor: colors.primary,
   },
   diaTexto: {
     fontFamily: fonts.medium,
@@ -148,14 +174,25 @@ const styles = StyleSheet.create({
   diaTextoFora: {
     color: colors.textFaint,
   },
+  diaTextoComEvento: {
+    fontFamily: fonts.bold,
+  },
   diaTextoHoje: {
     fontFamily: fonts.bold,
-    color: colors.primary,
+    color: colors.background,
   },
-  ponto: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
+  selo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
     backgroundColor: colors.primary,
+  },
+  seloTexto: {
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    color: colors.background,
   },
 });

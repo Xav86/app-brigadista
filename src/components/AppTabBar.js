@@ -17,6 +17,8 @@ export default function AppTabBar({
       {state.routes.map((route, index) => {
         const focused = state.index === index;
         const { options } = descriptors[route.key];
+        // Rotas registradas só para navegação interna ficam fora da barra.
+        if (options.tabBarItemStyle?.display === "none") return null;
         const color = focused ? colors.primary : colors.textMuted;
 
         function onPress() {

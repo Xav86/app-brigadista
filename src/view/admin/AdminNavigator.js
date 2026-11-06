@@ -5,6 +5,7 @@ import AgendaNavigator from "./agenda/AgendaNavigator";
 import EventosNavigator from "./eventos/EventosNavigator";
 import GestaoNavigator from "./gestao/GestaoNavigator";
 import InicioNavigator from "./inicio/InicioNavigator";
+import SolicitacoesScreen from "./inicio/SolicitacoesScreen";
 import { AdminDadosProvider } from "./useAdminDados";
 
 const Tab = createBottomTabNavigator();
@@ -12,7 +13,7 @@ const Tab = createBottomTabNavigator();
 const ICONS = {
   Home: "home",
   Agenda: "calendar",
-  Eventos: "calendar",
+  Solicitacoes: "inbox",
   Gestao: "user",
 };
 
@@ -34,13 +35,20 @@ export default function AdminNavigator({ onLogout }) {
           options={{ title: "Agenda" }}
         />
         <Tab.Screen
-          name="Eventos"
-          component={EventosNavigator}
-          options={{ title: "Eventos" }}
+          name="Solicitacoes"
+          component={SolicitacoesScreen}
+          options={{ title: "Solicitações" }}
         />
         <Tab.Screen name="Gestao" options={{ title: "Gestão" }}>
           {(props) => <GestaoNavigator {...props} onLogout={onLogout} />}
         </Tab.Screen>
+        {/* Sem botão na barra: continua registrada porque Início, Agenda e Gestão
+            navegam até a lista e o formulário de eventos por aqui. */}
+        <Tab.Screen
+          name="Eventos"
+          component={EventosNavigator}
+          options={{ title: "Eventos", tabBarItemStyle: { display: "none" } }}
+        />
       </Tab.Navigator>
     </AdminDadosProvider>
   );
