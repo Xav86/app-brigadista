@@ -1,7 +1,10 @@
 import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -31,6 +34,7 @@ const OPCOES = [
     icon: "award",
     titulo: "Certificações",
     descricao: "Suas certificações e validades",
+    rota: "Certificacoes",
   },
   {
     id: "notificacoes",
@@ -40,6 +44,9 @@ const OPCOES = [
     rota: "Notificacoes",
   },
 ];
+
+// A foto de perfil fica salva só neste aparelho (AsyncStorage), uma por e-mail.
+const CHAVE_FOTO = "@fotoPerfil:";
 
 function emBreve() {
   Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
@@ -66,11 +73,20 @@ function OpcaoItem({ opcao, onPress }) {
 
 export default function PerfilScreen({ navigation, onLogout }) {
   const [usuario, setUsuario] = useState(null);
+  const [foto, setFoto] = useState(null);
 
   useEffect(() => {
     async function carregarPerfil() {
       const email = auth.currentUser?.email;
       if (!email) return;
+      try {
+        const fotoSalva = await AsyncStorage.getItem(CHAVE_FOTO + email);
+        if (fotoSalva !== null) {
+          setFoto(fotoSalva);
+        }
+      } catch (e) {
+        console.warn("Erro ao carregar a foto de perfil:", e);
+      }
       try {
         const dados = await buscarUsuarioPorEmail(email);
         setUsuario(dados);
@@ -80,6 +96,34 @@ export default function PerfilScreen({ navigation, onLogout }) {
     }
     carregarPerfil();
   }, []);
+
+  async function escolherFoto() {
+    const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissao.granted) {
+      Alert.alert(
+        "Permissão necessária",
+        "Permita o acesso à galeria para escolher sua foto de perfil."
+      );
+      return;
+    }
+
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (resultado.canceled) return;
+
+    const uri = resultado.assets[0].uri;
+    setFoto(uri);
+    try {
+      await AsyncStorage.setItem(CHAVE_FOTO + auth.currentUser?.email, uri);
+    } catch (e) {
+      Alert.alert("Não foi possível salvar", "Tente novamente.");
+    }
+  }
 
   function confirmarSaida() {
     if (Platform.OS === "web") {
@@ -108,9 +152,18 @@ export default function PerfilScreen({ navigation, onLogout }) {
         </View>
 
         <Card style={styles.perfil}>
-          <View style={styles.avatar}>
-            <View style={styles.avatarMiolo} />
-          </View>
+          <Pressable onPress={escolherFoto} accessibilityRole="button">
+            <View style={styles.avatar}>
+              {foto ? (
+                <Image source={{ uri: foto }} style={styles.avatarFoto} />
+              ) : (
+                <View style={styles.avatarMiolo} />
+              )}
+            </View>
+            <View style={styles.avatarEditar}>
+              <Feather name="camera" size={11} color={colors.primary} />
+            </View>
+          </Pressable>
           <View style={styles.perfilInfo}>
             <Text style={styles.nome}>{nomeExibicao}</Text>
             <View style={styles.pills}>
@@ -179,6 +232,24 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarFoto: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  avatarEditar: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },

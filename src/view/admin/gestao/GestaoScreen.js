@@ -26,7 +26,7 @@ export default function GestaoScreen({ navigation, onLogout }) {
     {
       key: "certificados",
       label: "Certificados",
-      onPress: emBreve,
+      onPress: () => navigation.navigate("Certificacoes"),
     },
     {
       key: "brigadistas",

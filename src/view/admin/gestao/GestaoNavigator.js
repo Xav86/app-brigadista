@@ -8,6 +8,9 @@ import NovoBrigadistaScreen from "./NovoBrigadistaScreen";
 import InformacoesPessoaisScreen from "../../perfil/InformacoesPessoaisScreen";
 import { BrigadistasProvider } from "./useBrigadistas";
 
+import CertificacoesScreen from "./CertificacoesScreen";
+import CertificadoFormScreen from "./CertificadoFormScreen";
+
 const Stack = createNativeStackNavigator();
 
 export default function GestaoNavigator({ onLogout }) {
@@ -23,6 +26,8 @@ export default function GestaoNavigator({ onLogout }) {
           name="DetalhesBrigadista"
           component={DetalhesBrigadistaScreen}
         />
+        <Stack.Screen name="Certificacoes" component={CertificacoesScreen} />
+        <Stack.Screen name="CertificadoForm" component={CertificadoFormScreen} />
         <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
         <Stack.Screen
           name="InformacoesPessoais"

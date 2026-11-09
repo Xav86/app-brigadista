@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 import {
+  adicionarTipoCertificado,
   adicionarUsuario,
+  atualizarTipoCertificado,
   atualizarUsuarioNoBanco,
   escutarTiposCertificados,
   escutarUsuarios,
@@ -58,6 +60,10 @@ export function BrigadistasProvider({ children }) {
   const [tiposCertificados, setTiposCertificados] = useState(
     TIPOS_CERTIFICADOS_PADRAO,
   );
+
+    // todos os tipos cadastrados no firestore (ativos e inativos) para a tela de certificacoes.
+  const [tiposCadastrados, setTiposCadastrados] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(null);
 
@@ -75,6 +81,9 @@ export function BrigadistasProvider({ children }) {
     );
 
     const unsubTipos = escutarTiposCertificados((lista) => {
+
+      setTiposCadastrados(lista); 
+
       const ativos = lista.filter((t) => t.ativo);
       if (ativos.length > 0) {
         setTiposCertificados(ativos);
@@ -97,11 +106,21 @@ export function BrigadistasProvider({ children }) {
     return await atualizarUsuarioNoBanco(id, dadosUsuario);
   }
 
+  // cria o tipo de certificado quando nao ha 'id',caso contrario atualiza o existente
+  async function salvarTipoCertificado(id, dados) {
+    if (!id) {
+      return await adicionarTipoCertificado(dados);
+    }
+    return await atualizarTipoCertificado(id, dados);
+  }
+
   return (
     <BrigadistasContext.Provider
-      value={{
+            value={{
         brigadistas,
         tiposCertificados,
+        tiposCadastrados,
+        salvarTipoCertificado,   
         loading,
         erro,
         adicionarBrigadista,

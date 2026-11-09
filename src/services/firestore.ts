@@ -127,6 +127,15 @@ export async function adicionarTipoCertificado(
   return { id: ref.id, ...validado };
 }
 
+export async function atualizarTipoCertificado(
+  id: string,
+  dados: TipoCertificado,
+): Promise<RegistroComId<TipoCertificado>> {
+  const validado = validarTipoCertificado(dados);
+  await updateDoc(doc(db, COLECOES.TIPOS_CERTIFICADOS, id), validado);
+  return { id, ...validado };
+}
+
 // O Firestore guarda datas como Timestamp, então convertemos antes de salvar.
 function eventoParaBanco(evento: Evento) {
   return {

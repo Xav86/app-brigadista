@@ -1,6 +1,8 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import PerfilScreen from "../PerfilScreen";
+import CertificacoesScreen from "./CertificacoesScreen";
+import EnviarCertificadoScreen from "./EnviarCertificadoScreen";
 import NotificacoesScreen from "./NotificacoesScreen";
 import InformacoesPessoaisScreen from "../../perfil/InformacoesPessoaisScreen";
 
@@ -17,6 +19,11 @@ export default function PerfilNavigator({ onLogout }) {
         component={InformacoesPessoaisScreen}
       />
       <Stack.Screen name="Notificacoes" component={NotificacoesScreen} />
+      <Stack.Screen name="Certificacoes" component={CertificacoesScreen} />
+      <Stack.Screen
+        name="EnviarCertificado"
+        component={EnviarCertificadoScreen}
+      />
     </Stack.Navigator>
   );
 }
