@@ -1,17 +1,18 @@
 import { Feather } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors, fonts } from "../../../theme";
+import { colors, fonts } from "../theme";
 import {
   DIAS_SEMANA_CURTOS,
   getMonthLabel,
   getMonthWeeks,
   toIsoDate,
-} from "../../../utils/calendar";
+} from "../utils/calendar";
 
 // Calendário de mês pensado para ocupar a tela inteira: células grandes, sem
-// lista embaixo. Usado só na Agenda do admin — o MonthCalendar (compacto, em
-// src/components) continua servindo as outras telas que empilham calendário + conteúdo.
+// lista embaixo. Usado nas telas de Agenda (admin e brigadista) — o
+// MonthCalendar (compacto) continua servindo as telas que empilham
+// calendário + conteúdo (ex.: SolicitarDisponibilidadeScreen).
 export default function BigMonthCalendar({
   ano,
   mes,

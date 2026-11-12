@@ -264,7 +264,8 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: 6,
-    marginTop: 8,
+    paddingHorizontal: spacing.screen,
+    paddingTop: 8,
   },
   title: {
     fontFamily: fonts.bold,
@@ -281,6 +282,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+    paddingHorizontal: spacing.screen,
+    paddingTop: 12,
   },
   chip: {
     paddingHorizontal: 12,

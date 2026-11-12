@@ -2,10 +2,10 @@ import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import BigMonthCalendar from "../../../components/BigMonthCalendar";
 import { colors, fonts, spacing } from "../../../theme";
 import { eventosPorDia } from "../../../utils/eventos";
 import { useAdminDados } from "../useAdminDados";
-import BigMonthCalendar from "./BigMonthCalendar";
 import { useAgendaMes } from "./useAgendaMes";
 
 export default function AgendaScreen({ navigation }) {

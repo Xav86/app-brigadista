@@ -6,6 +6,10 @@ export function useAgendaMonth() {
     const hoje = new Date();
     return { ano: hoje.getFullYear(), mes: hoje.getMonth() };
   });
+  const [{ ano, mes }, setMesVisivel] = useState(() => {
+    const hoje = new Date();
+    return { ano: hoje.getFullYear(), mes: hoje.getMonth() };
+  });
 
   function mudarMes(delta) {
     setMesVisivel((atual) => {
