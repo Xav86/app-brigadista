@@ -48,12 +48,6 @@ export default function SolicitarDisponibilidadeScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader
-          title="Solicitar disponibilidade"
-          lead="Selecione os dias em que você tem interesse em servir."
-          onBack={() => navigation.goBack()}
-        />
-
         <Card tinted style={styles.competencia}>
           <View style={styles.competenciaTopo}>
             <Text style={styles.competenciaTitulo}>Competência aberta</Text>
