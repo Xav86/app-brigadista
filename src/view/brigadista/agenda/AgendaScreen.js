@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import BigMonthCalendar from "../../../components/BigMonthCalendar";
@@ -7,10 +7,6 @@ import { colors, fonts, spacing } from "../../../theme";
 import { toIsoDate } from "../../../utils/calendar";
 import { useAgendaMonth } from "./useAgendaMonth";
 import { EVENTOS_EXEMPLO } from "./eventosExemplo";
-
-function emBreve() {
-  Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
-}
 
 export default function AgendaScreen({ navigation }) {
   const { ano, mes, mesAnterior, proximoMes } = useAgendaMonth();
