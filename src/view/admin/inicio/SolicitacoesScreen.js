@@ -63,7 +63,7 @@ function SolicitacaoCard({
   onRecusar,
 }) {
   const pendente = pedido.status === "pendente";
-  const certificacoes = brigadista.certificados
+  const certificacoes = (brigadista?.certificados ?? [])
     .map((item) => item.nomeCertificado)
     .join(" • ");
 
@@ -108,6 +108,7 @@ function SolicitacaoCard({
       </View>
 
       <Text style={styles.subtitulo}>
+        {pedido.eventoNome ? `${pedido.eventoNome} • ` : ""}
         {pedido.datas.length}{" "}
         {pedido.datas.length === 1 ? "data informada" : "datas informadas"}
       </Text>

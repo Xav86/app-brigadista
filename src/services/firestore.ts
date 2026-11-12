@@ -16,14 +16,21 @@ import {
   Competencia,
   Escala,
   Evento,
+  Solicitacao,
+  StatusEscala,
+  StatusSolicitacao,
   TipoCertificado,
   Usuario,
   validarCompetencia,
   validarEscala,
   validarEvento,
+  validarSolicitacao,
   validarTipoCertificado,
   validarUsuario,
+  VALORES_ORIGEM_ESCALA,
   VALORES_RECORRENCIA,
+  VALORES_STATUS_ESCALA,
+  VALORES_STATUS_SOLICITACAO,
 } from "../models";
 import { db } from "./firebase";
 
@@ -34,9 +41,11 @@ export const COLECOES = {
   COMPETENCIAS: "competencias",
   CONFIGURACOES: "configuracoes",
   ESCALAS: "escalas",
+  SOLICITACOES: "solicitacoes",
 } as const;
 
 export type RegistroComId<T> = T & { id: string };
+export type EscalaComData = RegistroComId<Escala> & { data: string };
 
 function paraDate(valor: unknown): Date {
   if (valor instanceof Timestamp) {
@@ -58,6 +67,13 @@ function paraDate(valor: unknown): Date {
     if (!Number.isNaN(parsed.getTime())) return parsed;
   }
   return new Date();
+}
+
+function paraDataIso(d: Date): string {
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
 }
 
 export async function buscarUsuarioPorEmail(
@@ -184,10 +200,12 @@ export async function adicionarCompetencia(
 
 export async function adicionarEscala(
   dados: Escala,
-): Promise<RegistroComId<Escala>> {
+): Promise<EscalaComData> {
   const validado = validarEscala(dados);
+  const dataIso = paraDataIso(validado.dataHoraServico);
   const payload = {
     ...validado,
+    data: dataIso,
     dataHoraServico: Timestamp.fromDate(validado.dataHoraServico),
     historicoAlteracao: {
       dataAnterior: validado.historicoAlteracao.dataAnterior
@@ -197,7 +215,166 @@ export async function adicionarEscala(
     },
   };
   const ref = await addDoc(collection(db, COLECOES.ESCALAS), payload);
+  return { id: ref.id, data: dataIso, ...validado };
+}
+
+export async function atualizarStatusEscala(
+  id: string,
+  status: StatusEscala,
+  alteradoPorAdminId: string | null = null,
+): Promise<void> {
+  await updateDoc(doc(db, COLECOES.ESCALAS, id), {
+    status,
+    ...(alteradoPorAdminId
+      ? { "historicoAlteracao.alteradoPorAdminId": alteradoPorAdminId }
+      : {}),
+  });
+}
+
+export async function excluirEscala(id: string): Promise<void> {
+  await deleteDoc(doc(db, COLECOES.ESCALAS, id));
+}
+
+export function escutarEscalas(
+  onUpdate: (escalas: EscalaComData[]) => void,
+  onError?: (erro: Error) => void,
+  brigadistaId?: string,
+) {
+  const ref = brigadistaId
+    ? query(
+        collection(db, COLECOES.ESCALAS),
+        where("brigadistaId", "==", brigadistaId),
+      )
+    : collection(db, COLECOES.ESCALAS);
+
+  return onSnapshot(
+    ref,
+    (snapshot) => {
+      const lista: EscalaComData[] = snapshot.docs.map((docSnap) => {
+        const raw = docSnap.data();
+        const dataHoraServico = paraDate(raw.dataHoraServico);
+        const data =
+          typeof raw.data === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.data)
+            ? raw.data
+            : paraDataIso(dataHoraServico);
+        const hist =
+          raw.historicoAlteracao && typeof raw.historicoAlteracao === "object"
+            ? raw.historicoAlteracao
+            : {};
+        const notif =
+          raw.notificacao && typeof raw.notificacao === "object"
+            ? raw.notificacao
+            : {};
+
+        return {
+          id: docSnap.id,
+          competenciaId: raw.competenciaId ?? data.slice(0, 7),
+          eventoId: raw.eventoId ?? "",
+          brigadistaId: raw.brigadistaId ?? "",
+          eventoNome: raw.eventoNome ?? "",
+          eventoLocal: raw.eventoLocal ?? "",
+          brigadistaNome: raw.brigadistaNome ?? "",
+          dataHoraServico,
+          data,
+          status: VALORES_STATUS_ESCALA.includes(raw.status)
+            ? raw.status
+            : "pendente",
+          origem: VALORES_ORIGEM_ESCALA.includes(raw.origem)
+            ? raw.origem
+            : "auto_agendamento",
+          notificacao: {
+            enviarPush: notif.enviarPush !== false,
+            enviada: Boolean(notif.enviada),
+          },
+          historicoAlteracao: {
+            dataAnterior: hist.dataAnterior ? paraDate(hist.dataAnterior) : null,
+            alteradoPorAdminId: hist.alteradoPorAdminId ?? null,
+          },
+        };
+      });
+      onUpdate(lista);
+    },
+    (err) => {
+      if (onError) onError(err);
+    },
+  );
+}
+
+export async function adicionarSolicitacao(
+  dados: Solicitacao,
+): Promise<RegistroComId<Solicitacao>> {
+  const validado = validarSolicitacao(dados);
+  const payload = {
+    ...validado,
+    enviadaEm: Timestamp.fromDate(validado.enviadaEm),
+    respondidaEm: validado.respondidaEm
+      ? Timestamp.fromDate(validado.respondidaEm)
+      : null,
+  };
+  const ref = await addDoc(collection(db, COLECOES.SOLICITACOES), payload);
   return { id: ref.id, ...validado };
+}
+
+export async function responderSolicitacoesNoBanco(
+  ids: string[],
+  status: StatusSolicitacao,
+  motivo: string | null = null,
+): Promise<void> {
+  const agora = Timestamp.fromDate(new Date());
+  await Promise.all(
+    ids.map((id) =>
+      updateDoc(doc(db, COLECOES.SOLICITACOES, id), {
+        status,
+        motivo: motivo ?? null,
+        respondidaEm: agora,
+      }),
+    ),
+  );
+}
+
+export function escutarSolicitacoes(
+  onUpdate: (solicitacoes: RegistroComId<Solicitacao>[]) => void,
+  onError?: (erro: Error) => void,
+  brigadistaId?: string,
+) {
+  const ref = brigadistaId
+    ? query(
+        collection(db, COLECOES.SOLICITACOES),
+        where("brigadistaId", "==", brigadistaId),
+      )
+    : collection(db, COLECOES.SOLICITACOES);
+
+  return onSnapshot(
+    ref,
+    (snapshot) => {
+      const lista: RegistroComId<Solicitacao>[] = snapshot.docs.map(
+        (docSnap) => {
+          const raw = docSnap.data();
+          return {
+            id: docSnap.id,
+            brigadistaId: raw.brigadistaId ?? "",
+            brigadistaNome: raw.brigadistaNome ?? "Brigadista",
+            datas: Array.isArray(raw.datas) ? raw.datas.map(String) : [],
+            competenciaId: raw.competenciaId ?? "",
+            eventoId: raw.eventoId ?? null,
+            eventoNome: raw.eventoNome ?? null,
+            eventoLocal: raw.eventoLocal ?? null,
+            eventoHorario: raw.eventoHorario ?? null,
+            status: VALORES_STATUS_SOLICITACAO.includes(raw.status)
+              ? raw.status
+              : "pendente",
+            motivo: raw.motivo ?? null,
+            enviadaEm: paraDate(raw.enviadaEm),
+            respondidaEm: raw.respondidaEm ? paraDate(raw.respondidaEm) : null,
+          };
+        },
+      );
+      onUpdate(lista);
+    },
+    (err) => {
+      if (onError) onError(err);
+    },
+  );
 }
 
 export function escutarUsuarios(

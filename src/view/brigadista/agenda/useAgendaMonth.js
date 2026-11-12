@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-// Mês de referência do protótipo (sem backend, os eventos de exemplo são de outubro/2026).
-const ANO_INICIAL = 2026;
-const MES_INICIAL = 9;
-
+// Inicializa no mês e ano atuais do sistema (assim como a agenda do administrador).
 export function useAgendaMonth() {
-  const [{ ano, mes }, setMesVisivel] = useState({ ano: ANO_INICIAL, mes: MES_INICIAL });
+  const [{ ano, mes }, setMesVisivel] = useState(() => {
+    const hoje = new Date();
+    return { ano: hoje.getFullYear(), mes: hoje.getMonth() };
+  });
 
   function mudarMes(delta) {
     setMesVisivel((atual) => {

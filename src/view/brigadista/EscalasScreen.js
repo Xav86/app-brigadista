@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Alert,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,73 +12,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../components/Card";
 import EventCard from "../../components/EventCard";
 import { colors, fonts, spacing } from "../../theme";
-
-// Dados de exemplo enquanto não há backend/armazenamento local.
-const ESCALAS = {
-  proximas: [
-    {
-      id: "1",
-      dia: "12",
-      mes: "OUT",
-      titulo: "Treinamento da Brigada",
-      horario: "09:00 – 12:00",
-      local: "Unidade Criciúma",
-      status: "confirmado",
-    },
-    {
-      id: "2",
-      dia: "19",
-      mes: "OUT",
-      titulo: "Evento Comunitário",
-      horario: "14:00 – 18:00",
-      local: "Parque das Nações",
-      status: "confirmado",
-    },
-    {
-      id: "3",
-      dia: "26",
-      mes: "OUT",
-      titulo: "Treinamento Prático",
-      horario: "09:00 – 12:00",
-      local: "Unidade Criciúma",
-      status: "pendente",
-    },
-    {
-      id: "4",
-      dia: "05",
-      mes: "NOV",
-      titulo: "Simulado de Emergência",
-      horario: "08:00 – 12:00",
-      local: "Centro de Treinamento",
-      status: "pendente",
-    },
-  ],
-  anteriores: [
-    {
-      id: "5",
-      dia: "28",
-      mes: "SET",
-      titulo: "Culto de Domingo",
-      horario: "18:00 – 21:00",
-      local: "Unidade Criciúma",
-      status: "concluido",
-    },
-    {
-      id: "6",
-      dia: "14",
-      mes: "SET",
-      titulo: "Treinamento de Primeiros Socorros",
-      horario: "09:00 – 12:00",
-      local: "Centro de Treinamento",
-      status: "concluido",
-    },
-  ],
-};
+import { useBrigadistaDados } from "./useBrigadistaDados";
 
 const STATUS = {
   confirmado: { label: "Confirmado", tone: "success" },
   pendente: { label: "Pendente", tone: "warning" },
+  proposto: { label: "Proposto", tone: "warning" },
   concluido: { label: "Concluído", tone: "neutral" },
+  recusado: { label: "Recusado", tone: "neutral" },
 };
 
 const ABAS = [
@@ -86,13 +27,21 @@ const ABAS = [
   { key: "anteriores", label: "Anteriores" },
 ];
 
-function emBreve() {
-  Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
-}
-
 export default function MinhasEscalas({ navigation }) {
   const [aba, setAba] = useState("proximas");
-  const lista = ESCALAS[aba];
+  const { escalasProximas, escalasAnteriores, carregando } =
+    useBrigadistaDados();
+
+  const lista = aba === "proximas" ? escalasProximas : escalasAnteriores;
+
+  function irParaAgenda() {
+    const parent = navigation.getParent?.();
+    if (parent) {
+      parent.navigate("Agenda");
+    } else {
+      navigation.navigate("Agenda");
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -127,21 +76,28 @@ export default function MinhasEscalas({ navigation }) {
         </View>
 
         <View style={styles.lista}>
-          {lista.length ? (
-            lista.map((e) => (
-              <EventCard
-                key={e.id}
-                dia={e.dia}
-                mes={e.mes}
-                titulo={e.titulo}
-                horario={e.horario}
-                local={e.local}
-                statusLabel={STATUS[e.status].label}
-                statusTone={STATUS[e.status].tone}
-                passado={e.status === "concluido"}
-                onPress={() => navigation.navigate("EscalaDetalhes", { escala: e })}
-              />
-            ))
+          {carregando ? (
+            <ActivityIndicator color={colors.primary} style={styles.loading} />
+          ) : lista.length ? (
+            lista.map((e) => {
+              const statusInfo = STATUS[e.status] ?? STATUS.pendente;
+              return (
+                <EventCard
+                  key={e.id}
+                  dia={e.dia}
+                  mes={e.mes}
+                  titulo={e.titulo}
+                  horario={e.horario}
+                  local={e.local}
+                  statusLabel={statusInfo.label}
+                  statusTone={statusInfo.tone}
+                  passado={e.status === "concluido"}
+                  onPress={() =>
+                    navigation.navigate("EscalaDetalhes", { escala: e })
+                  }
+                />
+              );
+            })
           ) : (
             <Text style={styles.vazio}>Nenhuma escala por aqui.</Text>
           )}
@@ -150,7 +106,11 @@ export default function MinhasEscalas({ navigation }) {
         <Card style={styles.calendario}>
           <View style={styles.calendarioHeader}>
             <Text style={styles.calendarioTitulo}>Calendário</Text>
-            <Pressable onPress={emBreve} hitSlop={8} accessibilityRole="link">
+            <Pressable
+              onPress={irParaAgenda}
+              hitSlop={8}
+              accessibilityRole="link"
+            >
               <Text style={styles.link}>Ver calendário completo ›</Text>
             </Pressable>
           </View>
@@ -221,6 +181,9 @@ const styles = StyleSheet.create({
   },
   lista: {
     gap: 12,
+  },
+  loading: {
+    paddingVertical: 24,
   },
   metaText: {
     fontFamily: fonts.regular,

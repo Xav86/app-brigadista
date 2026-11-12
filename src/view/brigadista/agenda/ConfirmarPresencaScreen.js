@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "../../../components/Button";
@@ -7,24 +8,44 @@ import Card from "../../../components/Card";
 import EventSummary from "../../../components/EventSummary";
 import { colors, fonts, spacing } from "../../../theme";
 import { parseIsoDate } from "../../../utils/calendar";
+import { useBrigadistaDados } from "../useBrigadistaDados";
 
 export default function ConfirmarPresencaScreen({ navigation, route }) {
   const { evento } = route.params;
+  const { responderPresencaEvento } = useBrigadistaDados();
+  const [enviando, setEnviando] = useState(null); // "disponivel" | "indisponivel" | null
 
-  function responder(resposta) {
-    navigation.replace("PedidoEnviado", { evento, resposta });
+  async function responder(resposta) {
+    try {
+      setEnviando(resposta);
+      await responderPresencaEvento(evento, resposta);
+      navigation.replace("PedidoEnviado", { evento, resposta });
+    } catch (erro) {
+      Alert.alert(
+        "Não foi possível enviar",
+        erro?.message || "Verifique sua conexão e tente novamente.",
+      );
+    } finally {
+      setEnviando(null);
+    }
   }
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Pressable style={styles.voltar} onPress={() => navigation.goBack()} hitSlop={8}>
+          <Pressable
+            style={styles.voltar}
+            onPress={() => navigation.goBack()}
+            hitSlop={8}
+          >
             <Feather name="arrow-left" size={15} color={colors.text} />
           </Pressable>
           <View style={styles.headerCopy}>
             <Text style={styles.title}>Confirmar presença</Text>
-            <Text style={styles.lead}>Informe se você vai participar deste evento.</Text>
+            <Text style={styles.lead}>
+              Informe se você vai participar deste evento.
+            </Text>
           </View>
         </View>
 
@@ -45,18 +66,26 @@ export default function ConfirmarPresencaScreen({ navigation, route }) {
             <View style={styles.avisoTexto}>
               <Text style={styles.avisoTitulo}>Análise do administrador</Text>
               <Text style={styles.avisoCorpo}>
-                Sua resposta será analisada pelo administrador. Você receberá uma notificação
-                assim que houver uma atualização.
+                Sua resposta será analisada pelo administrador. Você receberá
+                uma notificação assim que houver uma atualização.
               </Text>
             </View>
           </Card>
         </ScrollView>
 
         <View style={styles.acoes}>
-          <Button title="Vou participar" rightIcon="check" onPress={() => responder("disponivel")} />
+          <Button
+            title="Vou participar"
+            rightIcon="check"
+            loading={enviando === "disponivel"}
+            disabled={enviando !== null}
+            onPress={() => responder("disponivel")}
+          />
           <Button
             title="Não vou poder participar"
             variant="outline"
+            loading={enviando === "indisponivel"}
+            disabled={enviando !== null}
             onPress={() => responder("indisponivel")}
           />
         </View>

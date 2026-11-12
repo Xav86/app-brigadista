@@ -6,21 +6,10 @@ import Card from "../../../components/Card";
 import StatusPill from "../../../components/StatusPill";
 import { colors, fonts, radius, spacing } from "../../../theme";
 
-// Dados de exemplo enquanto não há backend. Complementam os dados vindos da lista.
-const DETALHES = {
-  1: {
-    descricao:
-      "Treinamento prático de combate a incêndio e primeiros socorros.",
-    funcao: "Brigadista",
-    responsavel: "Carlos Almeida",
-    certificacoes: ["NR-23", "Primeiros Socorros"],
-  },
-};
-
 const DETALHES_PADRAO = {
-  descricao: "Sem descrição disponível.",
+  descricao: "Escala de serviço e apoio operacional da brigada.",
   funcao: "Brigadista",
-  responsavel: "A definir",
+  responsavel: "Coordenação da Brigada",
   certificacoes: [],
 };
 
@@ -36,6 +25,12 @@ const STATUS = {
     tone: "warning",
     titulo: "Sua participação ainda não foi confirmada",
     texto: "Você será avisado assim que o administrador responder.",
+  },
+  proposto: {
+    pill: "Proposto",
+    tone: "warning",
+    titulo: "Nova data proposta pelo administrador",
+    texto: "Verifique a disponibilidade para o horário indicado.",
   },
   concluido: {
     pill: "Concluído",
@@ -62,9 +57,15 @@ function InfoLinha({ label, valor }) {
 
 export default function EscalaDetalhesScreen({ navigation, route }) {
   const { escala } = route.params;
-  const extras = DETALHES[escala.id] ?? DETALHES_PADRAO;
-  const status = STATUS[escala.status];
-  const tone = TONES[status.tone];
+  const descricao = escala.descricao || DETALHES_PADRAO.descricao;
+  const funcao = escala.funcao || DETALHES_PADRAO.funcao;
+  const responsavel = escala.responsavel || DETALHES_PADRAO.responsavel;
+  const certificacoes = Array.isArray(escala.certificacoes)
+    ? escala.certificacoes
+    : DETALHES_PADRAO.certificacoes;
+
+  const status = STATUS[escala.status] ?? STATUS.pendente;
+  const tone = TONES[status.tone] ?? TONES.warning;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -91,7 +92,7 @@ export default function EscalaDetalhesScreen({ navigation, route }) {
             <View style={styles.resumoTextos}>
               <Text style={styles.titulo}>{escala.titulo}</Text>
               <Text style={styles.descricao} numberOfLines={2}>
-                {extras.descricao}
+                {descricao}
               </Text>
             </View>
             <StatusPill label={status.pill} tone={status.tone} />
@@ -101,8 +102,8 @@ export default function EscalaDetalhesScreen({ navigation, route }) {
             <Text style={styles.secaoTitulo}>Informações do evento</Text>
             <InfoLinha label="Horário" valor={escala.horario} />
             <InfoLinha label="Local" valor={escala.local} />
-            <InfoLinha label="Função" valor={extras.funcao} />
-            <InfoLinha label="Responsável" valor={extras.responsavel} />
+            <InfoLinha label="Função" valor={funcao} />
+            <InfoLinha label="Responsável" valor={responsavel} />
           </Card>
 
           <Card style={styles.secao}>
@@ -137,11 +138,11 @@ export default function EscalaDetalhesScreen({ navigation, route }) {
             <Text style={styles.participacaoTexto}>{status.texto}</Text>
           </View>
 
-          {extras.certificacoes.length ? (
+          {certificacoes.length ? (
             <Card style={styles.secao}>
               <Text style={styles.secaoTitulo}>Certificações necessárias</Text>
               <View style={styles.certificacoes}>
-                {extras.certificacoes.map((c) => (
+                {certificacoes.map((c) => (
                   <StatusPill key={c} label={c} tone="primary" />
                 ))}
               </View>

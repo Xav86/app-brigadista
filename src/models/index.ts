@@ -1,5 +1,21 @@
 export type StatusEscala = "pendente" | "confirmado" | "recusado" | "proposto";
 export type OrigemEscala = "auto_agendamento" | "manual_admin";
+export type StatusSolicitacao = "pendente" | "aprovada" | "recusada";
+
+export interface Solicitacao {
+  brigadistaId: string;
+  brigadistaNome: string;
+  datas: string[]; // Datas no formato ISO "YYYY-MM-DD"
+  competenciaId: string; // Ex: "2026-11"
+  eventoId?: string | null;
+  eventoNome?: string | null;
+  eventoLocal?: string | null;
+  eventoHorario?: string | null;
+  status: StatusSolicitacao;
+  motivo: string | null;
+  enviadaEm: Date;
+  respondidaEm?: Date | null;
+}
 
 export interface Escala {
   // Referências aos relacionamentos
@@ -105,6 +121,12 @@ export const VALORES_STATUS_ESCALA: StatusEscala[] = [
   "confirmado",
   "recusado",
   "proposto",
+];
+
+export const VALORES_STATUS_SOLICITACAO: StatusSolicitacao[] = [
+  "pendente",
+  "aprovada",
+  "recusada",
 ];
 
 export const VALORES_ORIGEM_ESCALA: OrigemEscala[] = [
@@ -391,5 +413,50 @@ export function validarEscala(dados: unknown): Escala {
       dataAnterior: hist.dataAnterior as Date | null,
       alteradoPorAdminId: hist.alteradoPorAdminId as string | null,
     },
+  };
+}
+
+export function validarSolicitacao(dados: unknown): Solicitacao {
+  if (!dados || typeof dados !== "object") {
+    throw new Error("Os dados da solicitação são obrigatórios.");
+  }
+  const s = dados as Record<string, unknown>;
+
+  assertTextoNaoVazio(s.brigadistaId, "brigadistaId");
+  assertTextoNaoVazio(s.brigadistaNome, "brigadistaNome");
+  if (!Array.isArray(s.datas) || s.datas.length === 0) {
+    throw new Error('O campo "datas" deve conter pelo menos uma data.');
+  }
+  const datas = s.datas.map((d, i) => {
+    assertIsoDateString(d, `datas[${i}]`);
+    return d;
+  });
+
+  const competenciaId =
+    typeof s.competenciaId === "string" && s.competenciaId.trim()
+      ? s.competenciaId.trim()
+      : datas[0].slice(0, 7);
+
+  assertEnum(s.status, VALORES_STATUS_SOLICITACAO, "status");
+  assertDataValida(s.enviadaEm, "enviadaEm");
+
+  return {
+    brigadistaId: s.brigadistaId.trim(),
+    brigadistaNome: s.brigadistaNome.trim(),
+    datas,
+    competenciaId,
+    eventoId: typeof s.eventoId === "string" && s.eventoId.trim() ? s.eventoId.trim() : null,
+    eventoNome:
+      typeof s.eventoNome === "string" && s.eventoNome.trim() ? s.eventoNome.trim() : null,
+    eventoLocal:
+      typeof s.eventoLocal === "string" && s.eventoLocal.trim() ? s.eventoLocal.trim() : null,
+    eventoHorario:
+      typeof s.eventoHorario === "string" && s.eventoHorario.trim()
+        ? s.eventoHorario.trim()
+        : null,
+    status: s.status,
+    motivo: typeof s.motivo === "string" && s.motivo.trim() ? s.motivo.trim() : null,
+    enviadaEm: s.enviadaEm,
+    respondidaEm: s.respondidaEm instanceof Date ? s.respondidaEm : null,
   };
 }

@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "../../../components/Button";
@@ -9,19 +9,26 @@ import DateListItem from "../../../components/DateListItem";
 import ScreenHeader from "../../../components/ScreenHeader";
 import { colors, fonts, spacing } from "../../../theme";
 import { parseIsoDate } from "../../../utils/calendar";
-
-// Tempo simulado de envio enquanto não há backend para receber a solicitação.
-const ATRASO_ENVIO_MS = 600;
+import { useBrigadistaDados } from "../useBrigadistaDados";
 
 export default function ConfirmarDisponibilidadeScreen({ navigation, route }) {
   const { datas, competencia } = route.params;
+  const { enviarSolicitacaoDisponibilidade } = useBrigadistaDados();
   const [enviando, setEnviando] = useState(false);
 
-  function handleEnviar() {
-    setEnviando(true);
-    setTimeout(() => {
+  async function handleEnviar() {
+    try {
+      setEnviando(true);
+      await enviarSolicitacaoDisponibilidade(datas, competencia);
       navigation.replace("DisponibilidadeEnviada", { datas, competencia });
-    }, ATRASO_ENVIO_MS);
+    } catch (erro) {
+      Alert.alert(
+        "Não foi possível enviar",
+        erro?.message || "Verifique sua conexão e tente novamente.",
+      );
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (

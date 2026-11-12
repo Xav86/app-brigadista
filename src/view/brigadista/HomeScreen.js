@@ -1,43 +1,33 @@
 import { Feather } from "@expo/vector-icons";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import StatusPill from "../../components/StatusPill";
 import { colors, fonts, spacing } from "../../theme";
-import { competenciaAberta } from "./agenda/competencia";
-
-// Dados de exemplo enquanto não há backend/armazenamento local.
-const brigadista = { nome: "Carlos" };
-const proximaEscala = {
-  dia: "12",
-  mes: "OUT",
-  titulo: "Treinamento da Brigada",
-  horario: "Segunda, 08:00 – 12:00",
-  local: "Unidade Criciúma",
-  status: "Confirmada",
-};
-const resumo = { confirmadas: 2, pendentes: 1 };
-const disponibilidade = { periodo: competenciaAberta().titulo, aberta: true };
-
-function emBreve() {
-  Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
-}
+import { useBrigadistaDados } from "./useBrigadistaDados";
 
 export default function InicioBrigadista({ navigation }) {
+  const { brigadista, escalasProximas, solicitacoes } = useBrigadistaDados();
+
+  const primeiroNome = brigadista?.nome
+    ? brigadista.nome.trim().split(" ")[0]
+    : "Brigadista";
+
+  const proximaEscala = escalasProximas[0] ?? null;
+  const confirmadasCount = escalasProximas.filter(
+    (e) => e.status === "confirmado",
+  ).length;
+  const pendentesCount = solicitacoes.filter(
+    (s) => s.status === "pendente",
+  ).length;
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Olá, {brigadista.nome}!</Text>
+          <Text style={styles.greeting}>Olá, {primeiroNome}!</Text>
           <Text style={styles.lead}>
             Acompanhe suas escalas e informe sua disponibilidade.
           </Text>
@@ -46,45 +36,71 @@ export default function InicioBrigadista({ navigation }) {
         <Card tinted style={styles.gap}>
           <View style={styles.rowBetween}>
             <Text style={styles.cardLabel}>Próxima escala</Text>
-            <StatusPill label={proximaEscala.status} tone="success" />
+            {proximaEscala ? (
+              <StatusPill
+                label={
+                  proximaEscala.status === "confirmado"
+                    ? "Confirmada"
+                    : "Pendente"
+                }
+                tone={
+                  proximaEscala.status === "confirmado" ? "success" : "warning"
+                }
+              />
+            ) : null}
           </View>
 
-          <View style={styles.escala}>
-            <View style={styles.data}>
-              <Text style={styles.dia}>{proximaEscala.dia}</Text>
-              <Text style={styles.mes}>{proximaEscala.mes}</Text>
-            </View>
-            <View style={styles.detalhes}>
-              <Text style={styles.escalaTitulo}>{proximaEscala.titulo}</Text>
-              <View style={styles.meta}>
-                <Feather name="clock" size={14} color={colors.textMuted} />
-                <Text style={styles.metaText}>{proximaEscala.horario}</Text>
+          {proximaEscala ? (
+            <>
+              <View style={styles.escala}>
+                <View style={styles.data}>
+                  <Text style={styles.dia}>{proximaEscala.dia}</Text>
+                  <Text style={styles.mes}>{proximaEscala.mes}</Text>
+                </View>
+                <View style={styles.detalhes}>
+                  <Text style={styles.escalaTitulo}>
+                    {proximaEscala.titulo}
+                  </Text>
+                  <View style={styles.meta}>
+                    <Feather name="clock" size={14} color={colors.textMuted} />
+                    <Text style={styles.metaText}>{proximaEscala.horario}</Text>
+                  </View>
+                  <View style={styles.meta}>
+                    <Feather
+                      name="map-pin"
+                      size={14}
+                      color={colors.textMuted}
+                    />
+                    <Text style={styles.metaText}>{proximaEscala.local}</Text>
+                  </View>
+                </View>
               </View>
-              <View style={styles.meta}>
-                <Feather name="map-pin" size={14} color={colors.textMuted} />
-                <Text style={styles.metaText}>{proximaEscala.local}</Text>
-              </View>
-            </View>
-          </View>
 
-          <Button
-            title="Ver detalhes da escala"
-            rightIcon="arrow-right"
-            onPress={() =>
-              navigation.navigate("Escalas", {
-                screen: "EscalaDetalhes",
-                params: {
-                  escala: {
-                    ...proximaEscala,
-                    id: "1",
-                    horario: "08:00 – 12:00",
-                    status: "confirmado",
-                  },
-                },
-                initial: false,
-              })
-            }
-          />
+              <Button
+                title="Ver detalhes da escala"
+                rightIcon="arrow-right"
+                onPress={() =>
+                  navigation.navigate("Escalas", {
+                    screen: "EscalaDetalhes",
+                    params: { escala: proximaEscala },
+                    initial: false,
+                  })
+                }
+              />
+            </>
+          ) : (
+            <>
+              <Text style={styles.body}>
+                Você ainda não possui escalas futuras agendadas. Confira os
+                eventos do mês na agenda ou envie sua disponibilidade.
+              </Text>
+              <Button
+                title="Ver agenda e eventos"
+                rightIcon="arrow-right"
+                onPress={() => navigation.navigate("Agenda")}
+              />
+            </>
+          )}
         </Card>
 
         <Text style={styles.sectionTitle}>Seu resumo</Text>
@@ -95,17 +111,24 @@ export default function InicioBrigadista({ navigation }) {
           >
             <Card style={styles.indicador}>
               <Text style={[styles.numero, { color: colors.primary }]}>
-                {resumo.confirmadas}
+                {confirmadasCount}
               </Text>
               <Text style={styles.indicadorLabel}>Escalas confirmadas</Text>
             </Card>
           </Pressable>
-          <Pressable style={styles.flex} onPress={emBreve}>
+          <Pressable
+            style={styles.flex}
+            onPress={() => navigation.navigate("Agenda")}
+          >
             <Card style={styles.indicador}>
               <Text style={[styles.numero, { color: colors.warning }]}>
-                {resumo.pendentes}
+                {pendentesCount}
               </Text>
-              <Text style={styles.indicadorLabel}>Solicitação pendente</Text>
+              <Text style={styles.indicadorLabel}>
+                {pendentesCount === 1
+                  ? "Solicitação pendente"
+                  : "Solicitações pendentes"}
+              </Text>
             </Card>
           </Pressable>
         </View>
@@ -144,9 +167,6 @@ const styles = StyleSheet.create({
   },
   gap: {
     gap: 14,
-  },
-  gapTop: {
-    marginTop: 12,
   },
   rowBetween: {
     flexDirection: "row",
@@ -223,19 +243,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textMuted,
-  },
-  disponibilidade: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  simbolo: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
   },
   body: {
     fontFamily: fonts.regular,

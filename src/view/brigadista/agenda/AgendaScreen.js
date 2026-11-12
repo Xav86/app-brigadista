@@ -1,54 +1,63 @@
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import Button from "../../../components/Button";
+import Card from "../../../components/Card";
 import EventCard from "../../../components/EventCard";
 import MonthCalendar from "../../../components/MonthCalendar";
+import StatusPill from "../../../components/StatusPill";
+import { colors, fonts, radius, spacing } from "../../../theme";
+import {
+  DIAS_SEMANA_CURTOS,
+  formatRelativeDays,
+  formatShortDate,
+  parseIsoDate,
+} from "../../../utils/calendar";
+import { useBrigadistaDados } from "../useBrigadistaDados";
 import { useAgendaMonth } from "./useAgendaMonth";
-import { colors, fonts, spacing } from "../../../theme";
-import { formatShortDate, toIsoDate } from "../../../utils/calendar";
 
-// Dados de exemplo enquanto não há backend/armazenamento local.
-const EVENTOS = [
-  {
-    id: "1",
-    data: new Date(2026, 9, 5),
-    titulo: "Treinamento da Brigada",
-    horario: "09:00 - 12:00",
-    local: "Unidade Criciúma",
-    status: "confirmado",
-  },
-  {
-    id: "2",
-    data: new Date(2026, 9, 12),
-    titulo: "Treinamento prático",
-    horario: "09:00 - 12:00",
-    local: "Unidade Criciúma",
-    status: "pendente",
-  },
-  {
-    id: "3",
-    data: new Date(2026, 9, 26),
-    titulo: "Simulado de Emergência",
-    horario: "09:00 - 12:00",
-    local: "Unidade Criciúma",
-    status: "confirmado",
-  },
-];
-
-const STATUS = {
+const STATUS_EVENTO = {
   confirmado: { label: "Confirmada", tone: "success" },
   pendente: { label: "Aguardando", tone: "warning" },
+  disponivel: { label: "Disponível", tone: "primary" },
+  recusado: { label: "Indisponível", tone: "neutral" },
 };
 
-function emBreve() {
-  Alert.alert("Em breve", "Esta funcionalidade ainda será construída.");
+const STATUS_PEDIDO = {
+  pendente: { label: "Pendente", tone: "warning" },
+  aprovada: { label: "Aprovada", tone: "success" },
+  recusada: { label: "Recusada", tone: "neutral" },
+};
+
+function DataChip({ iso }) {
+  const data = parseIsoDate(iso);
+  return (
+    <View style={styles.dataChip}>
+      <Text style={styles.dataChipTexto}>{formatShortDate(data)}</Text>
+      <Text style={styles.dataChipDia}>
+        {DIAS_SEMANA_CURTOS[data.getDay()]}
+      </Text>
+    </View>
+  );
 }
 
 export default function AgendaScreen({ navigation }) {
   const { ano, mes, mesAnterior, proximoMes } = useAgendaMonth();
+  const { compromissosDoMes, solicitacoes, carregando } = useBrigadistaDados();
+  const [abaAtiva, setAbaAtiva] = useState("agenda"); // "agenda" | "pedidos"
 
-  const eventosDoMes = EVENTOS.filter(
-    (evento) => evento.data.getFullYear() === ano && evento.data.getMonth() === mes
+  const eventosDoMes = compromissosDoMes(ano, mes);
+  const pedidosOrdenados = [...solicitacoes].sort(
+    (a, b) => b.enviadaEm - a.enviadaEm,
   );
 
   return (
@@ -56,15 +65,37 @@ export default function AgendaScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Minha agenda</Text>
-          <Text style={styles.lead}>Visualize seus compromissos e escalas.</Text>
+          <Text style={styles.lead}>
+            Visualize seus compromissos e acompanhe seus pedidos.
+          </Text>
         </View>
 
         <View style={styles.chips}>
-          <View style={[styles.chip, styles.chipAtivo]}>
-            <Text style={[styles.chipLabel, styles.chipLabelAtivo]}>Agenda</Text>
-          </View>
-          <Pressable style={styles.chip} onPress={emBreve}>
-            <Text style={styles.chipLabel}>Meus pedidos</Text>
+          <Pressable
+            style={[styles.chip, abaAtiva === "agenda" && styles.chipAtivo]}
+            onPress={() => setAbaAtiva("agenda")}
+          >
+            <Text
+              style={[
+                styles.chipLabel,
+                abaAtiva === "agenda" && styles.chipLabelAtivo,
+              ]}
+            >
+              Agenda
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.chip, abaAtiva === "pedidos" && styles.chipAtivo]}
+            onPress={() => setAbaAtiva("pedidos")}
+          >
+            <Text
+              style={[
+                styles.chipLabel,
+                abaAtiva === "pedidos" && styles.chipLabelAtivo,
+              ]}
+            >
+              Meus pedidos ({solicitacoes.length})
+            </Text>
           </Pressable>
           <Pressable
             style={styles.chip}
@@ -74,50 +105,145 @@ export default function AgendaScreen({ navigation }) {
           </Pressable>
         </View>
 
-        <MonthCalendar
-          ano={ano}
-          mes={mes}
-          onMesAnterior={mesAnterior}
-          onProximoMes={proximoMes}
-          diasDestacados={eventosDoMes.map((evento) => toIsoDate(evento.data))}
-        />
-
-        <View style={styles.compromissos}>
-          <View style={styles.compromissosHeader}>
-            <Text style={styles.sectionTitle}>Próximos compromissos</Text>
-            <Pressable onPress={emBreve} hitSlop={8}>
-              <Text style={styles.link}>Ver todos</Text>
-            </Pressable>
-          </View>
-
-          {eventosDoMes.length ? (
-            eventosDoMes.map((evento) => (
-              <EventCard
-                key={evento.id}
-                dia={formatShortDate(evento.data).split(" ")[0]}
-                mes={formatShortDate(evento.data).split(" ")[1]}
-                titulo={evento.titulo}
-                horario={evento.horario}
-                local={evento.local}
-                statusLabel={STATUS[evento.status].label}
-                statusTone={STATUS[evento.status].tone}
-                onPress={() =>
+        {abaAtiva === "agenda" ? (
+          <>
+            <MonthCalendar
+              ano={ano}
+              mes={mes}
+              onMesAnterior={mesAnterior}
+              onProximoMes={proximoMes}
+              diasDestacados={eventosDoMes.map((evento) => evento.dataIso)}
+              onDiaPress={(iso) => {
+                const ev = eventosDoMes.find((item) => item.dataIso === iso);
+                if (ev) {
                   navigation.navigate("ConfirmarPresenca", {
                     evento: {
-                      id: evento.id,
-                      titulo: evento.titulo,
-                      data: toIsoDate(evento.data),
-                      horario: evento.horario,
-                      local: evento.local,
+                      id: ev.id,
+                      eventoId: ev.eventoId,
+                      titulo: ev.titulo,
+                      descricao: ev.descricao,
+                      data: ev.dataIso,
+                      horario: ev.horario,
+                      local: ev.local,
+                      certificacoes: ev.certificacoes,
                     },
-                  })
+                  });
                 }
-              />
-            ))
-          ) : (
-            <Text style={styles.vazio}>Nenhum compromisso neste mês.</Text>
-          )}
-        </View>
+              }}
+            />
+
+            <View style={styles.compromissos}>
+              <View style={styles.compromissosHeader}>
+                <Text style={styles.sectionTitle}>Compromissos do mês</Text>
+                <Pressable
+                  onPress={() => navigation.navigate("SolicitarDisponibilidade")}
+                  hitSlop={8}
+                >
+                  <Text style={styles.link}>Enviar disponibilidade</Text>
+                </Pressable>
+              </View>
+
+              {carregando ? (
+                <ActivityIndicator
+                  color={colors.primary}
+                  style={styles.loading}
+                />
+              ) : eventosDoMes.length ? (
+                eventosDoMes.map((evento) => {
+                  const statusInfo =
+                    STATUS_EVENTO[evento.status] ?? STATUS_EVENTO.disponivel;
+                  return (
+                    <EventCard
+                      key={evento.id}
+                      dia={evento.dia}
+                      mes={evento.mes}
+                      titulo={evento.titulo}
+                      horario={evento.horario}
+                      local={evento.local}
+                      statusLabel={statusInfo.label}
+                      statusTone={statusInfo.tone}
+                      onPress={() =>
+                        navigation.navigate("ConfirmarPresenca", {
+                          evento: {
+                            id: evento.id,
+                            eventoId: evento.eventoId,
+                            titulo: evento.titulo,
+                            descricao: evento.descricao,
+                            data: evento.dataIso,
+                            horario: evento.horario,
+                            local: evento.local,
+                            certificacoes: evento.certificacoes,
+                          },
+                        })
+                      }
+                    />
+                  );
+                })
+              ) : (
+                <Text style={styles.vazio}>Nenhum compromisso neste mês.</Text>
+              )}
+            </View>
+          </>
+        ) : (
+          <View style={styles.pedidosWrap}>
+            <View style={styles.compromissosHeader}>
+              <Text style={styles.sectionTitle}>
+                Solicitações enviadas ao administrador
+              </Text>
+            </View>
+
+            {pedidosOrdenados.length ? (
+              pedidosOrdenados.map((pedido) => {
+                const st =
+                  STATUS_PEDIDO[pedido.status] ?? STATUS_PEDIDO.pendente;
+                return (
+                  <Card key={pedido.id} style={styles.pedidoCard}>
+                    <View style={styles.pedidoTopo}>
+                      <View style={styles.flex}>
+                        <Text style={styles.pedidoTitulo}>
+                          {pedido.eventoNome ||
+                            `Disponibilidade (${pedido.datas.length} ${
+                              pedido.datas.length === 1 ? "dia" : "dias"
+                            })`}
+                        </Text>
+                        <Text style={styles.pedidoMeta}>
+                          Enviado {formatRelativeDays(pedido.enviadaEm)}
+                        </Text>
+                      </View>
+                      <StatusPill label={st.label} tone={st.tone} />
+                    </View>
+
+                    <View style={styles.datasRow}>
+                      {pedido.datas.map((iso) => (
+                        <DataChip key={iso} iso={iso} />
+                      ))}
+                    </View>
+
+                    {pedido.motivo ? (
+                      <Text style={styles.motivoTexto}>
+                        Observação: {pedido.motivo}
+                      </Text>
+                    ) : null}
+                  </Card>
+                );
+              })
+            ) : (
+              <View style={styles.vazioBox}>
+                <Feather name="inbox" size={26} color={colors.textFaint} />
+                <Text style={styles.vazio}>
+                  Você ainda não enviou solicitações de disponibilidade.
+                </Text>
+                <Button
+                  title="Solicitar disponibilidade"
+                  rightIcon="arrow-right"
+                  onPress={() =>
+                    navigation.navigate("SolicitarDisponibilidade")
+                  }
+                />
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -127,6 +253,9 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  flex: {
+    flex: 1,
   },
   content: {
     padding: spacing.screen,
@@ -188,11 +317,72 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.primary,
   },
+  loading: {
+    paddingVertical: 24,
+  },
   vazio: {
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textMuted,
     textAlign: "center",
-    paddingVertical: 24,
+    paddingVertical: 16,
+  },
+  pedidosWrap: {
+    gap: 12,
+  },
+  pedidoCard: {
+    gap: 10,
+  },
+  pedidoTopo: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  pedidoTitulo: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  pedidoMeta: {
+    marginTop: 2,
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  datasRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  dataChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.neutralSoft,
+  },
+  dataChipTexto: {
+    fontFamily: fonts.semibold,
+    fontSize: 11,
+    color: colors.text,
+  },
+  dataChipDia: {
+    fontFamily: fonts.regular,
+    fontSize: 10,
+    color: colors.textMuted,
+  },
+  motivoTexto: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    fontStyle: "italic",
+    color: colors.textMuted,
+  },
+  vazioBox: {
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 28,
   },
 });

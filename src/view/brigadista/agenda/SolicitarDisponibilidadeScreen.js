@@ -11,6 +11,7 @@ import ScreenHeader from "../../../components/ScreenHeader";
 import StatusPill from "../../../components/StatusPill";
 import { colors, fonts, spacing } from "../../../theme";
 import { parseIsoDate } from "../../../utils/calendar";
+import { useBrigadistaDados } from "../useBrigadistaDados";
 import {
   LIMITE_DIAS_POR_SOLICITACAO,
   competenciaAberta,
@@ -19,7 +20,8 @@ import {
 } from "./competencia";
 
 export default function SolicitarDisponibilidadeScreen({ navigation }) {
-  const [competencia] = useState(() => competenciaAberta());
+  const dadosContexto = useBrigadistaDados();
+  const competencia = dadosContexto?.competencia ?? competenciaAberta();
   const [datas, setDatas] = useState([]);
   const [erro, setErro] = useState(null);
 
