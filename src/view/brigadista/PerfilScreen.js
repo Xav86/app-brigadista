@@ -14,6 +14,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+//prof nao passou em sala mas precisa p salvar a foto no banco 
+// n vamos usar - import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import * as ImageManipulator from "expo-image-manipulator";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../../services/firebase";
+
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import StatusPill from "../../components/StatusPill";
@@ -45,7 +51,6 @@ const OPCOES = [
   },
 ];
 
-// A foto de perfil fica salva só neste aparelho (AsyncStorage), uma por e-mail.
 const CHAVE_FOTO = "@fotoPerfil:";
 
 function emBreve() {
@@ -76,28 +81,21 @@ export default function PerfilScreen({ navigation, onLogout }) {
   const [foto, setFoto] = useState(null);
 
   useEffect(() => {
-    async function carregarPerfil() {
-      const email = auth.currentUser?.email;
-      if (!email) return;
-      try {
-        const fotoSalva = await AsyncStorage.getItem(CHAVE_FOTO + email);
-        if (fotoSalva !== null) {
-          setFoto(fotoSalva);
-        }
-      } catch (e) {
-        console.warn("Erro ao carregar a foto de perfil:", e);
-      }
-      try {
-        const dados = await buscarUsuarioPorEmail(email);
-        setUsuario(dados);
-      } catch (err) {
-        console.warn("Erro ao buscar dados do perfil:", err);
-      }
+  async function carregarPerfil() {
+    const email = auth.currentUser?.email;
+    if (!email) return;
+    try {
+      const dados = await buscarUsuarioPorEmail(email);
+      setUsuario(dados);
+      if (dados?.fotoUrl) setFoto(dados.fotoUrl);
+    } catch (err) {
+      console.warn("Erro ao buscar dados do perfil:", err);
     }
-    carregarPerfil();
-  }, []);
+  }
+  carregarPerfil();
+}, []);
 
-  async function escolherFoto() {
+    async function escolherFoto() {
     const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissao.granted) {
       Alert.alert(
@@ -116,11 +114,18 @@ export default function PerfilScreen({ navigation, onLogout }) {
 
     if (resultado.canceled) return;
 
-    const uri = resultado.assets[0].uri;
-    setFoto(uri);
     try {
-      await AsyncStorage.setItem(CHAVE_FOTO + auth.currentUser?.email, uri);
+      const reduzida = await ImageManipulator.manipulateAsync(
+        resultado.assets[0].uri,
+        [{ resize: { width: 256, height: 256 } }],
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      );
+      const dataUri = `data:image/jpeg;base64,${reduzida.base64}`;
+
+      await updateDoc(doc(db, "usuarios", usuario.id), { fotoUrl: dataUri });
+      setFoto(dataUri);
     } catch (e) {
+      console.warn("Erro ao salvar foto:", e);
       Alert.alert("Não foi possível salvar", "Tente novamente.");
     }
   }

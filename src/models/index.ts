@@ -114,6 +114,7 @@ export interface Usuario {
   fcmTokens: string[]; // Tokens para notificação push (Req 11)
   certificados: CertificadoBrigadista[]; // Sub-documentos embutidos
   criadoEm: Date; // Timestamp do Firebase
+  fotoUrl?: string; // foto de perfil
 }
 
 export const VALORES_STATUS_ESCALA: StatusEscala[] = [

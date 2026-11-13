@@ -103,6 +103,7 @@ export async function buscarUsuarioPorEmail(
     especialidade: raw.especialidade ?? "nenhum",
     fcmTokens: Array.isArray(raw.fcmTokens) ? raw.fcmTokens : [],
     certificados: Array.isArray(raw.certificados) ? raw.certificados : [],
+    fotoUrl: typeof raw.fotoUrl === "string" ? raw.fotoUrl : "",
     criadoEm: paraDate(raw.criadoEm),
   };
 }
