@@ -12,7 +12,7 @@ import {
 // Calendário de mês pensado para ocupar a tela inteira: células grandes, sem
 // lista embaixo. Usado nas telas de Agenda (admin e brigadista) — o
 // MonthCalendar (compacto) continua servindo as telas que empilham
-// calendário + conteúdo (ex.: SolicitarDisponibilidadeScreen).
+// calendário + conteúdo.
 export default function BigMonthCalendar({
   ano,
   mes,

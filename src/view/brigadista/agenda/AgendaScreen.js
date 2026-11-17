@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import EventCard from "../../../components/EventCard";
 import MonthCalendar from "../../../components/MonthCalendar";
@@ -97,12 +96,6 @@ export default function AgendaScreen({ navigation }) {
               Meus pedidos ({solicitacoes.length})
             </Text>
           </Pressable>
-          <Pressable
-            style={styles.chip}
-            onPress={() => navigation.navigate("SolicitarDisponibilidade")}
-          >
-            <Text style={styles.chipLabel}>Solicitar disponibilidade</Text>
-          </Pressable>
         </View>
 
         {abaAtiva === "agenda" ? (
@@ -135,12 +128,6 @@ export default function AgendaScreen({ navigation }) {
             <View style={styles.compromissos}>
               <View style={styles.compromissosHeader}>
                 <Text style={styles.sectionTitle}>Compromissos do mês</Text>
-                <Pressable
-                  onPress={() => navigation.navigate("SolicitarDisponibilidade")}
-                  hitSlop={8}
-                >
-                  <Text style={styles.link}>Enviar disponibilidade</Text>
-                </Pressable>
               </View>
 
               {carregando ? (
@@ -233,13 +220,6 @@ export default function AgendaScreen({ navigation }) {
                 <Text style={styles.vazio}>
                   Você ainda não enviou solicitações de disponibilidade.
                 </Text>
-                <Button
-                  title="Solicitar disponibilidade"
-                  rightIcon="arrow-right"
-                  onPress={() =>
-                    navigation.navigate("SolicitarDisponibilidade")
-                  }
-                />
               </View>
             )}
           </View>
@@ -314,11 +294,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     fontSize: 15,
     color: colors.text,
-  },
-  link: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    color: colors.primary,
   },
   loading: {
     paddingVertical: 24,
