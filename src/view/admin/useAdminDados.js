@@ -16,7 +16,6 @@ import {
 } from "../../services/firestore";
 import { parseIsoDate, toIsoDate } from "../../utils/calendar";
 import { ocorrenciasNoMes } from "../../utils/eventos";
-import { ADMIN_EXEMPLO, BRIGADISTAS_EXEMPLO } from "./dadosExemplo";
 
 // Estado compartilhado entre as abas do administrador (Início, Eventos, Agenda).
 // Todos os dados (eventos, brigadistas, escalas e solicitações) são sincronizados em tempo real com o Firestore.
@@ -91,22 +90,18 @@ export function AdminDadosProvider({ children }) {
   );
   const admin = adminBanco
     ? { id: adminBanco.id, nome: adminBanco.nome, email: adminBanco.email }
-    : ADMIN_EXEMPLO;
+    : null;
 
-  const brigadistasReais = usuariosBanco.filter(
+  const brigadistas = usuariosBanco.filter(
     (u) => u.tipoUsuario !== "admin",
   );
-  const brigadistas =
-    brigadistasReais.length > 0 ? brigadistasReais : BRIGADISTAS_EXEMPLO;
 
   function buscarEvento(id) {
     return eventos.find((evento) => evento.id === id);
   }
 
   function buscarBrigadista(id) {
-    const encontrado =
-      usuariosBanco.find((u) => u.id === id) ||
-      BRIGADISTAS_EXEMPLO.find((b) => b.id === id);
+    const encontrado = usuariosBanco.find((u) => u.id === id);
     if (encontrado) return encontrado;
 
     const pedido = solicitacoes.find((s) => s.brigadistaId === id);

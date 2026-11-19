@@ -6,63 +6,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../../components/Card";
 import { colors, fonts, radius, spacing } from "../../../theme";
 
-// Dados de exemplo enquanto não há backend/armazenamento local.
-const NOTIFICACOES_INICIAIS = [
-  {
-    id: "1",
-    grupo: "Hoje",
-    tipo: "escala",
-    titulo: "Escala se aproximando",
-    texto: "Sua escala no Treinamento de Brigada acontece amanhã às 08:00.",
-    tempo: "há 10 min",
-    lida: false,
-  },
-  {
-    id: "2",
-    grupo: "Hoje",
-    tipo: "aprovada",
-    titulo: "Solicitação aprovada",
-    texto: "Sua disponibilidade para o dia 12 de outubro foi aprovada.",
-    tempo: "há 32 min",
-    lida: true,
-  },
-  {
-    id: "3",
-    grupo: "Ontem",
-    tipo: "competencia",
-    titulo: "Nova competência disponível",
-    texto: "O agendamento de novembro já está disponível.",
-    tempo: "Ontem",
-    lida: true,
-  },
-  {
-    id: "4",
-    grupo: "Ontem",
-    tipo: "documento",
-    titulo: "Documento atualizado",
-    texto: "Foi adicionado um novo documento na seção de certificações.",
-    tempo: "Ontem",
-    lida: true,
-  },
-  {
-    id: "5",
-    grupo: "Esta semana",
-    tipo: "alteracao",
-    titulo: "Alteração de evento",
-    texto: "O evento Simulado de Emergência teve alteração de local.",
-    tempo: "2 dias",
-    lida: true,
-  },
-  {
-    id: "6",
-    grupo: "Esta semana",
-    tipo: "brigadista",
-    titulo: "Novo brigadista na equipe",
-    texto: "Maria Santos foi adicionada à equipe da unidade.",
-    tempo: "3 dias",
-    lida: true,
-  },
-];
+// Sem integração com Firestore ainda; lista começa vazia até definirmos como gerar notificações reais.
+const NOTIFICACOES_INICIAIS = [];
 
 const GRUPOS = ["Hoje", "Ontem", "Esta semana"];
 

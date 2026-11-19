@@ -108,7 +108,7 @@ export default function InicioScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Painel administrativo</Text>
-          <Text style={styles.lead}>Olá, {admin.nome}</Text>
+          <Text style={styles.lead}>Olá, {admin?.nome ?? "administrador"}</Text>
         </View>
 
         <Card tinted style={styles.solicitacoes}>
