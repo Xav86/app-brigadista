@@ -1,3 +1,4 @@
+// desativado, se não tiver mais uso remover
 import { useState } from "react";
 import {
   ActivityIndicator,

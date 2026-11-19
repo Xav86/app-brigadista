@@ -1,7 +1,8 @@
+// desativado, se não tiver mais uso remover
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import EscalasScreen from "../EscalasScreen";
-import EscalaDetalhesScreen from "./EscalaDetalhesScreen";
+import EscalaDetalhesScreen from "../agenda/EscalaDetalhesScreen";
 
 const Stack = createNativeStackNavigator();
 

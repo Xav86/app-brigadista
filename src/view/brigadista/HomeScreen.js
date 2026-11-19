@@ -80,7 +80,7 @@ export default function InicioBrigadista({ navigation }) {
                 title="Ver detalhes da escala"
                 rightIcon="arrow-right"
                 onPress={() =>
-                  navigation.navigate("Escalas", {
+                  navigation.navigate("Agenda", {
                     screen: "EscalaDetalhes",
                     params: { escala: proximaEscala },
                     initial: false,
@@ -107,7 +107,7 @@ export default function InicioBrigadista({ navigation }) {
         <View style={styles.indicadores}>
           <Pressable
             style={styles.flex}
-            onPress={() => navigation.navigate("Escalas")}
+            onPress={() => navigation.navigate("Agenda")}
           >
             <Card style={styles.indicador}>
               <Text style={[styles.numero, { color: colors.primary }]}>

@@ -93,7 +93,7 @@ export default function AgendaScreen({ navigation }) {
                 abaAtiva === "pedidos" && styles.chipLabelAtivo,
               ]}
             >
-              Meus pedidos ({solicitacoes.length})
+              Histórico de escala ({solicitacoes.length})
             </Text>
           </Pressable>
         </View>
