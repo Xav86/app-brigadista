@@ -16,6 +16,7 @@ import * as LocalAuthentication from "expo-local-authentication";
 import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signOut,
 } from "firebase/auth";
 
 import { colors, fonts, spacing } from "../../theme";
@@ -54,6 +55,13 @@ export default function LoginScreen({ onLogin }) {
       setErroLoginGeral(
         "Usuário autenticado, mas o cadastro não foi encontrado no sistema.",
       );
+      return;
+    }
+
+    // Usuário inativado pelo administrador não entra no app.
+    if (perfil.ativo === false) {
+      await signOut(auth);
+      setErroLoginGeral("Este usuário foi desativado. Contate o administrador.");
       return;
     }
 

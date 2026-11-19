@@ -12,6 +12,11 @@ export function mascararData(texto) {
   return `${digitos.slice(0, 2)}/${digitos.slice(2, 4)}/${digitos.slice(4)}`;
 }
 
+// Deixa só os números (ex.: quantidade de brigadistas)
+export function mascararNumero(texto, tamanhoMaximo) {
+  return somenteDigitos(texto).slice(0, tamanhoMaximo);
+}
+
 // "0930" -> "09:30"
 export function mascararHora(texto) {
   const digitos = somenteDigitos(texto).slice(0, 4);

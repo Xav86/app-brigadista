@@ -104,6 +104,8 @@ export async function buscarUsuarioPorEmail(
     fcmTokens: Array.isArray(raw.fcmTokens) ? raw.fcmTokens : [],
     certificados: Array.isArray(raw.certificados) ? raw.certificados : [],
     fotoUrl: typeof raw.fotoUrl === "string" ? raw.fotoUrl : "",
+    tipoSanguineo: raw.tipoSanguineo ?? "",
+    ativo: raw.ativo !== false,
     criadoEm: paraDate(raw.criadoEm),
   };
 }
@@ -131,6 +133,22 @@ export async function atualizarUsuarioNoBanco(
   };
   await updateDoc(doc(db, COLECOES.USUARIOS, id), payload);
   return { id, ...validado };
+}
+
+// Ativa ou inativa o usuário sem mexer no resto do cadastro.
+export async function alterarAtivoUsuario(
+  id: string,
+  ativo: boolean,
+): Promise<void> {
+  await updateDoc(doc(db, COLECOES.USUARIOS, id), { ativo });
+}
+
+// O próprio brigadista informa o tipo sanguíneo pela tela de informações pessoais.
+export async function salvarTipoSanguineo(
+  id: string,
+  tipoSanguineo: string,
+): Promise<void> {
+  await updateDoc(doc(db, COLECOES.USUARIOS, id), { tipoSanguineo });
 }
 
 export async function adicionarTipoCertificado(
@@ -402,6 +420,8 @@ export function escutarUsuarios(
           especialidade: raw.especialidade ?? "nenhum",
           fcmTokens: Array.isArray(raw.fcmTokens) ? raw.fcmTokens : [],
           certificados: Array.isArray(raw.certificados) ? raw.certificados : [],
+          tipoSanguineo: raw.tipoSanguineo ?? "",
+          ativo: raw.ativo !== false,
           criadoEm: paraDate(raw.criadoEm),
         };
       });
@@ -466,6 +486,7 @@ export function escutarEventos(
           certificacoes: Array.isArray(raw.certificacoes)
             ? raw.certificacoes
             : [],
+          minimoBrigadistas: Number(raw.minimoBrigadistas) || 1,
           notificacoesAtivas: raw.notificacoesAtivas !== false,
         };
       });

@@ -13,6 +13,7 @@ import {
 } from "../../../utils/formulario";
 
 export const TAMANHO_MAXIMO_DESCRICAO = 300;
+export const MAXIMO_BRIGADISTAS = 99;
 
 export const REGRA_SEM_RECORRENCIA = {
   recorrencia: "nenhuma",
@@ -29,6 +30,7 @@ export function camposIniciais(evento, dataInicial) {
       data: dataInicial ? formatDateBR(parseIsoDate(dataInicial)) : "",
       horaInicio: "",
       horaFim: "",
+      minimoBrigadistas: "1",
       certificacoes: [],
       regra: REGRA_SEM_RECORRENCIA,
     };
@@ -41,6 +43,7 @@ export function camposIniciais(evento, dataInicial) {
     data: formatDateBR(evento.dataInicio),
     horaInicio: formatTime(evento.dataInicio),
     horaFim: formatTime(evento.dataFim),
+    minimoBrigadistas: String(evento.minimoBrigadistas ?? 1),
     certificacoes: evento.certificacoes ?? [],
     regra: {
       recorrencia: evento.recorrencia ?? "nenhuma",
@@ -85,6 +88,17 @@ export function validarFormularioEvento(
     erros.horaFim = "Deve ser depois do início";
   }
 
+  const minimoBrigadistas = Number(campos.minimoBrigadistas);
+  if (!campos.minimoBrigadistas.trim()) {
+    erros.minimoBrigadistas = "Informe quantos brigadistas o evento precisa";
+  } else if (
+    !Number.isInteger(minimoBrigadistas) ||
+    minimoBrigadistas < 1 ||
+    minimoBrigadistas > MAXIMO_BRIGADISTAS
+  ) {
+    erros.minimoBrigadistas = `Use um número de 1 a ${MAXIMO_BRIGADISTAS}`;
+  }
+
   const { regra } = campos;
   if (regra.recorrencia === "semanal" && regra.diasSemana.length === 0) {
     erros.regra = "Escolha pelo menos um dia da semana";
@@ -110,6 +124,7 @@ export function validarFormularioEvento(
       diasSemana: regra.recorrencia === "semanal" ? regra.diasSemana : [],
       terminaEm: recorrente ? terminaEm : null,
       certificacoes: campos.certificacoes,
+      minimoBrigadistas,
     },
   };
 }

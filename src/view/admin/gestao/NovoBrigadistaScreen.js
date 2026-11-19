@@ -14,10 +14,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
+import OptionsSheet from "../../../components/OptionsSheet";
 import TextField from "../../../components/TextField";
 import {
   VALORES_ESPECIALIDADE,
   VALORES_SEXO,
+  VALORES_TIPO_SANGUINEO,
   VALORES_TIPO_USUARIO,
 } from "../../../models";
 import { colors, fonts, radius, spacing } from "../../../theme";
@@ -33,6 +35,49 @@ const SEXOS_LABELS = {
 const TIPOS_USUARIO_LABELS = {
   user: "Brigadista",
   admin: "Administrador",
+};
+
+const PROFISSIONAL_LABELS = {
+  sim: "Sim",
+  nao: "Não",
+};
+
+// Monta as opções da lista de seleção a partir dos valores e dos textos de cada um.
+function montarOpcoes(valores, labels) {
+  return valores.map((valor) => ({ value: valor, label: labels[valor] }));
+}
+
+const TIPOS_SANGUINEOS_LABELS = {
+  "": "Não informado",
+  "A+": "A+",
+  "A-": "A-",
+  "B+": "B+",
+  "B-": "B-",
+  "AB+": "AB+",
+  "AB-": "AB-",
+  "O+": "O+",
+  "O-": "O-",
+};
+
+// Cada seletor do formulário abre a mesma lista, só mudando o título e as opções.
+const SELETORES = {
+  sexo: { titulo: "Sexo", opcoes: montarOpcoes(VALORES_SEXO, SEXOS_LABELS) },
+  tipoUsuario: {
+    titulo: "Tipo de usuário",
+    opcoes: montarOpcoes(VALORES_TIPO_USUARIO, TIPOS_USUARIO_LABELS),
+  },
+  profissional: {
+    titulo: "Profissional",
+    opcoes: montarOpcoes(["sim", "nao"], PROFISSIONAL_LABELS),
+  },
+  especialidade: {
+    titulo: "Especialidade",
+    opcoes: montarOpcoes(VALORES_ESPECIALIDADE, ESPECIALIDADES_LABELS),
+  },
+  tipoSanguineo: {
+    titulo: "Tipo sanguíneo",
+    opcoes: montarOpcoes(["", ...VALORES_TIPO_SANGUINEO], TIPOS_SANGUINEOS_LABELS),
+  },
 };
 
 /**
@@ -137,6 +182,11 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
   const [especialidade, setEspecialidade] = useState(
     existente?.especialidade ?? "nenhum",
   );
+  const [tipoSanguineo, setTipoSanguineo] = useState(
+    existente?.tipoSanguineo ?? "",
+  );
+  // Qual lista de seleção está aberta (null = nenhuma)
+  const [seletorAberto, setSeletorAberto] = useState(null);
 
   // Certificações selecionadas e metadados
   const idsIniciais = existente?.certificados
@@ -168,27 +218,22 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
     );
   }
 
-  function alternarSexo() {
-    const idx = VALORES_SEXO.indexOf(sexo);
-    setSexo(VALORES_SEXO[(idx + 1) % VALORES_SEXO.length]);
+  function valorDoSeletor(nomeSeletor) {
+    if (nomeSeletor === "sexo") return sexo;
+    if (nomeSeletor === "tipoUsuario") return tipoUsuario;
+    if (nomeSeletor === "profissional") return isProfissional ? "sim" : "nao";
+    if (nomeSeletor === "especialidade") return especialidade;
+    if (nomeSeletor === "tipoSanguineo") return tipoSanguineo;
+    return null;
   }
 
-  function alternarTipoUsuario() {
-    const idx = VALORES_TIPO_USUARIO.indexOf(tipoUsuario);
-    setTipoUsuario(
-      VALORES_TIPO_USUARIO[(idx + 1) % VALORES_TIPO_USUARIO.length],
-    );
-  }
-
-  function alternarProfissional() {
-    setIsProfissional((atual) => !atual);
-  }
-
-  function alternarEspecialidade() {
-    const idx = VALORES_ESPECIALIDADE.indexOf(especialidade);
-    setEspecialidade(
-      VALORES_ESPECIALIDADE[(idx + 1) % VALORES_ESPECIALIDADE.length],
-    );
+  function escolherOpcao(valor) {
+    if (seletorAberto === "sexo") setSexo(valor);
+    if (seletorAberto === "tipoUsuario") setTipoUsuario(valor);
+    if (seletorAberto === "profissional") setIsProfissional(valor === "sim");
+    if (seletorAberto === "especialidade") setEspecialidade(valor);
+    if (seletorAberto === "tipoSanguineo") setTipoSanguineo(valor);
+    setSeletorAberto(null);
   }
 
   async function handleSalvar() {
@@ -249,6 +294,7 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
       sexo,
       isProfissional,
       especialidade,
+      tipoSanguineo,
       fcmTokens: existente?.fcmTokens ?? [],
       certificados,
       criadoEm: existente?.criadoEm ?? new Date(),
@@ -378,7 +424,7 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
                 <Text style={styles.label}>Sexo</Text>
                 <Pressable
                   style={styles.selectBox}
-                  onPress={alternarSexo}
+                  onPress={() => setSeletorAberto("sexo")}
                   accessibilityRole="button"
                 >
                   <Text style={styles.selectText} numberOfLines={1}>
@@ -396,7 +442,7 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
                 <Text style={styles.label}>Tipo de usuário</Text>
                 <Pressable
                   style={styles.selectBox}
-                  onPress={alternarTipoUsuario}
+                  onPress={() => setSeletorAberto("tipoUsuario")}
                   accessibilityRole="button"
                 >
                   <Text style={styles.selectText} numberOfLines={1}>
@@ -416,7 +462,7 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
                 <Text style={styles.label}>Profissional</Text>
                 <Pressable
                   style={styles.selectBox}
-                  onPress={alternarProfissional}
+                  onPress={() => setSeletorAberto("profissional")}
                   accessibilityRole="button"
                 >
                   <Text style={styles.selectText}>
@@ -434,7 +480,7 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
                 <Text style={styles.label}>Especialidade</Text>
                 <Pressable
                   style={styles.selectBox}
-                  onPress={alternarEspecialidade}
+                  onPress={() => setSeletorAberto("especialidade")}
                   accessibilityRole="button"
                 >
                   <Text style={styles.selectText} numberOfLines={1}>
@@ -447,6 +493,20 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
                   />
                 </Pressable>
               </View>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Tipo sanguíneo</Text>
+              <Pressable
+                style={styles.selectBox}
+                onPress={() => setSeletorAberto("tipoSanguineo")}
+                accessibilityRole="button"
+              >
+                <Text style={styles.selectText}>
+                  {TIPOS_SANGUINEOS_LABELS[tipoSanguineo]}
+                </Text>
+                <Feather name="chevron-down" size={16} color={colors.textMuted} />
+              </Pressable>
             </View>
 
             <Card style={styles.certCard}>
@@ -589,6 +649,15 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <OptionsSheet
+        visible={seletorAberto !== null}
+        title={seletorAberto ? SELETORES[seletorAberto].titulo : ""}
+        opcoes={seletorAberto ? SELETORES[seletorAberto].opcoes : []}
+        valor={valorDoSeletor(seletorAberto)}
+        onSelect={escolherOpcao}
+        onClose={() => setSeletorAberto(null)}
+      />
     </SafeAreaView>
   );
 }

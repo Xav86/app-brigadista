@@ -5,37 +5,75 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import ScreenHeader from "../../../components/ScreenHeader";
+import StatusPill from "../../../components/StatusPill";
 import { colors, fonts, spacing } from "../../../theme";
 import { formatFullDate, getWeekdayLabel, parseIsoDate } from "../../../utils/calendar";
-import { eventosPorDia, formatarHorario } from "../../../utils/eventos";
+import {
+  descreverEquipe,
+  equipeIncompleta,
+  eventosPorDia,
+  formatarHorario,
+} from "../../../utils/eventos";
 import { useAdminDados } from "../useAdminDados";
+
+const STATUS_ESCALA = {
+  confirmado: { label: "Confirmado", tone: "success" },
+  pendente: { label: "Pendente", tone: "warning" },
+  proposto: { label: "Proposto", tone: "neutral" },
+};
 
 function minutosDoDia(data) {
   return data.getHours() * 60 + data.getMinutes();
 }
 
-function EventoDoDia({ evento, escalados, onPress }) {
+function EventoDoDia({ evento, escalas, onPress }) {
+  const incompleta = equipeIncompleta(escalas.length, evento);
+
   return (
     <Pressable onPress={onPress} accessibilityRole="button">
       {({ pressed }) => (
         <Card style={[styles.eventoCard, pressed && styles.eventoCardPressed]}>
-          <View style={styles.eventoHorario}>
-            <Feather name="clock" size={13} color={colors.primary} />
-            <Text style={styles.eventoHorarioTexto} numberOfLines={1}>
-              {formatarHorario(evento)}
-            </Text>
+          <View style={styles.eventoTopo}>
+            <View style={styles.eventoHorario}>
+              <Feather name="clock" size={13} color={colors.primary} />
+              <Text style={styles.eventoHorarioTexto} numberOfLines={1}>
+                {formatarHorario(evento)}
+              </Text>
+            </View>
+            <View style={styles.flex}>
+              <Text style={styles.eventoTitulo}>{evento.nome}</Text>
+              <Text style={styles.eventoLocal} numberOfLines={1}>
+                {evento.local}
+              </Text>
+              <Text
+                style={[styles.eventoEquipe, incompleta && styles.equipeAlerta]}
+              >
+                Equipe: {descreverEquipe(escalas.length, evento)}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={colors.textMuted} />
           </View>
-          <View style={styles.flex}>
-            <Text style={styles.eventoTitulo}>{evento.nome}</Text>
-            <Text style={styles.eventoLocal} numberOfLines={1}>
-              {evento.local}
+
+          {escalas.length ? (
+            <View style={styles.escalados}>
+              {escalas.map((escala) => (
+                <View key={escala.id} style={styles.escalado}>
+                  <Feather name="user" size={13} color={colors.textMuted} />
+                  <Text style={styles.escaladoNome} numberOfLines={1}>
+                    {escala.brigadistaNome}
+                  </Text>
+                  <StatusPill
+                    label={STATUS_ESCALA[escala.status]?.label ?? escala.status}
+                    tone={STATUS_ESCALA[escala.status]?.tone ?? "neutral"}
+                  />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.semEscalados}>
+              Nenhum brigadista escalado neste dia.
             </Text>
-            <Text style={styles.eventoEquipe}>
-              {escalados}{" "}
-              {escalados === 1 ? "brigadista escalado" : "brigadistas escalados"}
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={18} color={colors.textMuted} />
+          )}
         </Card>
       )}
     </Pressable>
@@ -83,10 +121,9 @@ export default function AgendaDiaScreen({ navigation, route }) {
               <EventoDoDia
                 key={evento.id}
                 evento={evento}
-                escalados={
-                  escalasDoEvento(evento.id).filter((item) => item.data === diaIso)
-                    .length
-                }
+                escalas={escalasDoEvento(evento.id).filter(
+                  (item) => item.data === diaIso,
+                )}
                 onPress={() => abrirEvento(evento.id)}
               />
             ))}
@@ -121,6 +158,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   eventoCard: {
+    gap: 12,
+  },
+  eventoTopo: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -154,6 +194,32 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontFamily: fonts.regular,
     fontSize: 11,
+    color: colors.textMuted,
+  },
+  equipeAlerta: {
+    fontFamily: fonts.semibold,
+    color: colors.warning,
+  },
+  escalados: {
+    gap: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  escalado: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  escaladoNome: {
+    flex: 1,
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: colors.text,
+  },
+  semEscalados: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
     color: colors.textMuted,
   },
   vazio: {

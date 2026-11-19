@@ -142,6 +142,8 @@ export default function BrigadistasScreen({ navigation }) {
             {filtrados.length ? (
               filtrados.map((item) => {
                 const qtdCerts = item.certificados?.length ?? 0;
+                const ativo = item.ativo !== false;
+                const corStatus = ativo ? colors.success : colors.textMuted;
                 const especialidadeLabel =
                   item.especialidade && item.especialidade !== "nenhum"
                     ? ESPECIALIDADES_LABELS[item.especialidade]
@@ -178,22 +180,24 @@ export default function BrigadistasScreen({ navigation }) {
                             <View
                               style={[
                                 styles.statusBadge,
-                                styles.statusAtivoBg,
+                                ativo
+                                  ? styles.statusAtivoBg
+                                  : styles.statusInativoBg,
                               ]}
                             >
                               <View
                                 style={[
                                   styles.statusDot,
-                                  { backgroundColor: colors.success },
+                                  { backgroundColor: corStatus },
                                 ]}
                               />
                               <Text
                                 style={[
                                   styles.statusLabel,
-                                  { color: colors.success },
+                                  { color: corStatus },
                                 ]}
                               >
-                                Ativo
+                                {ativo ? "Ativo" : "Inativo"}
                               </Text>
                             </View>
 
@@ -400,6 +404,9 @@ const styles = StyleSheet.create({
   },
   statusAtivoBg: {
     backgroundColor: colors.successSoft,
+  },
+  statusInativoBg: {
+    backgroundColor: colors.neutralSoft,
   },
   statusDot: {
     width: 6,

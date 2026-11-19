@@ -18,7 +18,7 @@ import { parseIsoDate, toIsoDate } from "../../utils/calendar";
 import { ocorrenciasNoMes } from "../../utils/eventos";
 
 // Estado compartilhado entre as abas do administrador (Início, Eventos, Agenda).
-// Todos os dados (eventos, brigadistas, escalas e solicitações) são sincronizados em tempo real com o Firestore.
+// Todos os dados (eventos, brigadistas, escalas e solicitações) vêm do Firestore em tempo real.
 const AdminDadosContext = createContext(null);
 
 function montarDataHoraServico(dataIso, evento) {
@@ -90,10 +90,11 @@ export function AdminDadosProvider({ children }) {
   );
   const admin = adminBanco
     ? { id: adminBanco.id, nome: adminBanco.nome, email: adminBanco.email }
-    : null;
+    : { id: null, nome: "Administrador", email: emailLogado ?? "" };
 
+  // Só os brigadistas ativos entram no painel e no agendamento manual.
   const brigadistas = usuariosBanco.filter(
-    (u) => u.tipoUsuario !== "admin",
+    (u) => u.tipoUsuario !== "admin" && u.ativo !== false,
   );
 
   function buscarEvento(id) {
@@ -110,6 +111,13 @@ export function AdminDadosProvider({ children }) {
       nome: pedido?.brigadistaNome || "Brigadista",
       certificados: [],
     };
+  }
+
+  // Escalas de um brigadista (todas, inclusive as recusadas), da mais próxima para a mais distante.
+  function escalasDoBrigadista(brigadistaId) {
+    return escalas
+      .filter((item) => item.brigadistaId === brigadistaId)
+      .sort((a, b) => a.dataHoraServico - b.dataHoraServico);
   }
 
   function escalasDoEvento(eventoId) {
@@ -270,6 +278,7 @@ export function AdminDadosProvider({ children }) {
         buscarEvento,
         buscarBrigadista,
         escalasDoEvento,
+        escalasDoBrigadista,
         salvarEvento,
         excluirEvento,
         adicionarEscalas,

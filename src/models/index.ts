@@ -71,6 +71,7 @@ export interface Evento {
   diasSemana: number[]; // Só na recorrência semanal: 0 = domingo ... 6 = sábado
   terminaEm: Date | null; // Último dia da recorrência (null = não termina)
   certificacoes: string[]; // Ids dos tipos de certificado exigidos
+  minimoBrigadistas: number; // Quantos brigadistas o evento precisa no mínimo
   notificacoesAtivas: boolean;
 }
 
@@ -83,6 +84,7 @@ export interface TipoCertificado {
 }
 
 export type TipoUsuario = "admin" | "user";
+export type TipoSanguineo = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "";
 export type Sexo = "M" | "F" | "Outro";
 export type StatusEspecialidade =
   | "medico"
@@ -115,6 +117,8 @@ export interface Usuario {
   certificados: CertificadoBrigadista[]; // Sub-documentos embutidos
   criadoEm: Date; // Timestamp do Firebase
   fotoUrl?: string; // foto de perfil
+  tipoSanguineo?: TipoSanguineo; // "" = não informado
+  ativo?: boolean; // false = usuário inativado pelo admin (sem o campo conta como ativo)
 }
 
 export const VALORES_STATUS_ESCALA: StatusEscala[] = [
@@ -150,6 +154,17 @@ export const VALORES_RECORRENCIA: Recorrencia[] = [
 export const VALORES_TIPO_USUARIO: TipoUsuario[] = ["admin", "user"];
 
 export const VALORES_SEXO: Sexo[] = ["M", "F", "Outro"];
+
+export const VALORES_TIPO_SANGUINEO: TipoSanguineo[] = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
+];
 
 export const VALORES_ESPECIALIDADE: StatusEspecialidade[] = [
   "medico",
@@ -260,6 +275,11 @@ export function validarUsuario(dados: unknown): Usuario {
 
   assertDataValida(u.criadoEm, "criadoEm");
 
+  const tipoSanguineo = u.tipoSanguineo ?? "";
+  if (tipoSanguineo !== "") {
+    assertEnum(tipoSanguineo, VALORES_TIPO_SANGUINEO, "tipoSanguineo");
+  }
+
   return {
     nome: u.nome.trim(),
     email: u.email.trim(),
@@ -271,6 +291,7 @@ export function validarUsuario(dados: unknown): Usuario {
     especialidade: u.especialidade,
     fcmTokens: u.fcmTokens,
     certificados,
+    tipoSanguineo: tipoSanguineo as TipoSanguineo,
     criadoEm: u.criadoEm,
   };
 }
@@ -320,6 +341,15 @@ export function validarEvento(dados: unknown): Evento {
   }
   const certificacoes = Array.isArray(ev.certificacoes) ? ev.certificacoes : [];
 
+  const minimoBrigadistas = ev.minimoBrigadistas ?? 1;
+  if (
+    typeof minimoBrigadistas !== "number" ||
+    !Number.isInteger(minimoBrigadistas) ||
+    minimoBrigadistas < 1
+  ) {
+    throw new Error('O campo "minimoBrigadistas" deve ser um número inteiro maior que zero.');
+  }
+
   return {
     nome: ev.nome.trim(),
     descricao: typeof ev.descricao === "string" ? ev.descricao.trim() : "",
@@ -331,6 +361,7 @@ export function validarEvento(dados: unknown): Evento {
     diasSemana,
     terminaEm: ev.terminaEm ?? null,
     certificacoes: certificacoes.map(String),
+    minimoBrigadistas,
     notificacoesAtivas: ev.notificacoesAtivas,
   };
 }

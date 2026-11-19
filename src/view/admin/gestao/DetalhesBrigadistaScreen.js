@@ -1,36 +1,52 @@
 import { Feather } from "@expo/vector-icons";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import EventCard from "../../../components/EventCard";
 import StatusPill from "../../../components/StatusPill";
+import { alterarAtivoUsuario } from "../../../services/firestore";
 import { colors, fonts, radius, spacing } from "../../../theme";
+import { formatShortDate, formatTime, startOfDay } from "../../../utils/calendar";
+import { useAdminDados } from "../useAdminDados";
 import { ESPECIALIDADES_LABELS, useBrigadistas } from "./useBrigadistas";
 
-const ESCALAS_PADRAO = [
-  {
-    id: "e1",
-    dia: "12",
-    mes: "OUT",
-    titulo: "Treinamento da Brigada",
-    horario: "09:00 - 12:00",
-    local: "Unidade Criciúma",
-    statusLabel: "Confirmado",
-    statusTone: "success",
-  },
-  {
-    id: "e2",
-    dia: "05",
-    mes: "NOV",
-    titulo: "Simulado de Emergência",
-    horario: "08:00 - 12:00",
-    local: "Centro de Treinamento",
-    statusLabel: "Pendente",
-    statusTone: "warning",
-  },
-];
+const STATUS_ESCALA = {
+  confirmado: { label: "Confirmado", tone: "success" },
+  pendente: { label: "Pendente", tone: "warning" },
+  proposto: { label: "Proposto", tone: "neutral" },
+  recusado: { label: "Recusado", tone: "primary" },
+};
+
+// Alert.alert com botões não funciona no Expo Web, então lá usamos o confirm do navegador.
+function confirmar(titulo, mensagem, textoBotao, aoConfirmar) {
+  if (Platform.OS === "web") {
+    if (window.confirm(`${titulo}\n${mensagem}`)) aoConfirmar();
+    return;
+  }
+  Alert.alert(titulo, mensagem, [
+    { text: "Cancelar", style: "cancel" },
+    { text: textoBotao, style: "destructive", onPress: aoConfirmar },
+  ]);
+}
+
+function avisar(titulo, mensagem) {
+  if (Platform.OS === "web") {
+    window.alert(`${titulo}\n${mensagem}`);
+    return;
+  }
+  Alert.alert(titulo, mensagem);
+}
 
 function formatarIsoParaBr(iso = "") {
   const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -66,6 +82,8 @@ function avaliarValidade(dataValidadeIso = "") {
 
 export default function DetalhesBrigadistaScreen({ navigation, route }) {
   const { brigadistas } = useBrigadistas();
+  const { escalasDoBrigadista } = useAdminDados();
+  const [salvando, setSalvando] = useState(false);
   const brigadistaId = route?.params?.brigadistaId;
   const brigadista = brigadistas.find((b) => b.id === brigadistaId);
 
@@ -90,6 +108,36 @@ export default function DetalhesBrigadistaScreen({ navigation, route }) {
   }
 
   const certificados = brigadista.certificados ?? [];
+  const ativo = brigadista.ativo !== false;
+
+  const hoje = startOfDay(new Date());
+  const proximasEscalas = escalasDoBrigadista(brigadista.id).filter(
+    (escala) => escala.dataHoraServico >= hoje && escala.status !== "recusado",
+  );
+
+  async function gravarAtivo(novoValor) {
+    try {
+      setSalvando(true);
+      await alterarAtivoUsuario(brigadista.id, novoValor);
+    } catch (erro) {
+      avisar("Não foi possível salvar", erro.message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  function handleAlternarAtivo() {
+    if (ativo) {
+      confirmar(
+        "Inativar usuário",
+        `${brigadista.nome} não vai mais conseguir entrar no app nem ser escalado. Deseja continuar?`,
+        "Inativar",
+        () => gravarAtivo(false),
+      );
+      return;
+    }
+    gravarAtivo(true);
+  }
   const especialidadeLabel =
     ESPECIALIDADES_LABELS[brigadista.especialidade] || "Nenhuma";
 
@@ -125,7 +173,10 @@ export default function DetalhesBrigadistaScreen({ navigation, route }) {
                   }
                   tone="neutral"
                 />
-                <StatusPill label="Ativo" tone="success" />
+                <StatusPill
+                  label={ativo ? "Ativo" : "Inativo"}
+                  tone={ativo ? "success" : "neutral"}
+                />
               </View>
             </View>
           </View>
@@ -140,6 +191,9 @@ export default function DetalhesBrigadistaScreen({ navigation, route }) {
             <Text style={styles.dadoLinha}>
               Nascimento  •  {formatarIsoParaBr(brigadista.dataNascimento)}  •  Sexo:{" "}
               {brigadista.sexo}
+            </Text>
+            <Text style={styles.dadoLinha}>
+              Tipo sanguíneo  •  {brigadista.tipoSanguineo || "Não informado"}
             </Text>
             <Text style={styles.dadoLinha}>
               {brigadista.isProfissional ? "Profissional" : "Voluntário"}  •  Especialidade:{" "}
@@ -198,20 +252,28 @@ export default function DetalhesBrigadistaScreen({ navigation, route }) {
 
         <View style={styles.secao}>
           <Text style={styles.secaoTitulo}>Próximas escalas</Text>
-          <View style={styles.secaoLista}>
-            {ESCALAS_PADRAO.map((escala) => (
-              <EventCard
-                key={escala.id}
-                dia={escala.dia}
-                mes={escala.mes}
-                titulo={escala.titulo}
-                horario={escala.horario}
-                local={escala.local}
-                statusLabel={escala.statusLabel}
-                statusTone={escala.statusTone}
-              />
-            ))}
-          </View>
+          {proximasEscalas.length ? (
+            <View style={styles.secaoLista}>
+              {proximasEscalas.map((escala) => {
+                const [dia, mes] = formatShortDate(escala.dataHoraServico).split(" ");
+                const status = STATUS_ESCALA[escala.status];
+                return (
+                  <EventCard
+                    key={escala.id}
+                    dia={dia}
+                    mes={mes}
+                    titulo={escala.eventoNome}
+                    horario={formatTime(escala.dataHoraServico)}
+                    local={escala.eventoLocal}
+                    statusLabel={status?.label}
+                    statusTone={status?.tone}
+                  />
+                );
+              })}
+            </View>
+          ) : (
+            <Text style={styles.vazio}>Nenhuma escala marcada.</Text>
+          )}
         </View>
 
         <View style={styles.acoes}>
@@ -224,14 +286,10 @@ export default function DetalhesBrigadistaScreen({ navigation, route }) {
             }
           />
           <Button
-            title="Desativar usuário"
+            title={ativo ? "Inativar usuário" : "Reativar usuário"}
             variant="soft"
-            onPress={() =>
-              Alert.alert(
-                "Em breve",
-                "A desativação de conta será integrada ao controle de acesso.",
-              )
-            }
+            loading={salvando}
+            onPress={handleAlternarAtivo}
           />
         </View>
       </ScrollView>

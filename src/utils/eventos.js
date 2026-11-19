@@ -127,3 +127,13 @@ export function descreverRecorrencia(evento) {
 
   return `${label} • ${nomes.join(", ")}`;
 }
+
+// "2 de 5 brigadistas" (quantos estão escalados e quantos o evento precisa no mínimo).
+export function descreverEquipe(escalados, evento) {
+  const minimo = evento.minimoBrigadistas ?? 1;
+  return `${escalados} de ${minimo} ${minimo === 1 ? "brigadista" : "brigadistas"}`;
+}
+
+export function equipeIncompleta(escalados, evento) {
+  return escalados < (evento.minimoBrigadistas ?? 1);
+}

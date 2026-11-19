@@ -23,6 +23,7 @@ import { descreverRecorrencia, isRecorrente } from "../../../utils/eventos";
 import {
   mascararData,
   mascararHora,
+  mascararNumero,
   parseDataBR,
 } from "../../../utils/formulario";
 import { TIPOS_CERTIFICADOS_PADRAO } from "../gestao/useBrigadistas";
@@ -252,6 +253,20 @@ export default function EventoFormScreen({ navigation, route }) {
               />
             </Campo>
           </View>
+
+          <Campo label="Número mínimo de brigadistas">
+            <TextField
+              icon="users"
+              placeholder="1"
+              value={campos.minimoBrigadistas}
+              onChangeText={(texto) =>
+                alterar("minimoBrigadistas", mascararNumero(texto, 2))
+              }
+              error={erros.minimoBrigadistas}
+              keyboardType="number-pad"
+              maxLength={2}
+            />
+          </Campo>
 
           <View>
             <Pressable

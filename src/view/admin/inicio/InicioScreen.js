@@ -12,6 +12,8 @@ import {
 } from "../../../utils/calendar";
 import { contarCertificadosVencendo } from "../../../utils/certificados";
 import {
+  descreverEquipe,
+  equipeIncompleta,
   formatarHorario,
   gerarOcorrencias,
   proximaOcorrencia,
@@ -63,11 +65,13 @@ function ProximoEvento({ evento, data, escalados, onPress }) {
               <Feather name="clock" size={12} color={colors.textMuted} />
               <Text style={styles.metaText}>{formatarHorario(evento)}</Text>
             </View>
-            <Text style={styles.metaText}>
-              {escalados}{" "}
-              {escalados === 1
-                ? "brigadista escalado"
-                : "brigadistas escalados"}
+            <Text
+              style={[
+                styles.metaText,
+                equipeIncompleta(escalados, evento) && styles.metaAlerta,
+              ]}
+            >
+              Equipe: {descreverEquipe(escalados, evento)}
             </Text>
           </View>
           <Feather name="chevron-right" size={18} color={colors.textMuted} />
@@ -316,6 +320,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.textMuted,
+  },
+  metaAlerta: {
+    fontFamily: fonts.semibold,
+    color: colors.warning,
   },
   vazio: {
     fontFamily: fonts.regular,

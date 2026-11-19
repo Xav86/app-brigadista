@@ -20,14 +20,25 @@ import {
 
 import Button from "../../components/Button";
 import Card from "../../components/Card";
+import OptionsSheet from "../../components/OptionsSheet";
 import TextField from "../../components/TextField";
 import { auth } from "../../services/firebase";
-import { buscarUsuarioPorEmail } from "../../services/firestore";
+import { VALORES_TIPO_SANGUINEO } from "../../models";
+import {
+  buscarUsuarioPorEmail,
+  salvarTipoSanguineo,
+} from "../../services/firestore";
 import { colors, fonts, radius, spacing } from "../../theme";
+
+const OPCOES_TIPO_SANGUINEO = VALORES_TIPO_SANGUINEO.map((tipo) => ({
+  value: tipo,
+  label: tipo,
+}));
 
 export default function InformacoesPessoaisScreen({ navigation }) {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [escolhendoSangue, setEscolhendoSangue] = useState(false);
 
   // Estados para troca de senha
   const [senhaAtual, setSenhaAtual] = useState("");
@@ -54,6 +65,16 @@ export default function InformacoesPessoaisScreen({ navigation }) {
     }
     carregarDados();
   }, []);
+
+  async function escolherTipoSanguineo(tipo) {
+    if (!usuario) return;
+    try {
+      await salvarTipoSanguineo(usuario.id, tipo);
+      setUsuario({ ...usuario, tipoSanguineo: tipo });
+    } catch (err) {
+      Alert.alert("Erro", "Não foi possível salvar o tipo sanguíneo.");
+    }
+  }
 
   function formatarDataBr(iso = "") {
     if (!iso) return "-";
@@ -181,6 +202,20 @@ export default function InformacoesPessoaisScreen({ navigation }) {
                   </Text>
                 </View>
 
+                <Pressable
+                  style={styles.linhaInfo}
+                  onPress={() => setEscolhendoSangue(true)}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.rotulo}>Tipo sanguíneo</Text>
+                  <View style={styles.linhaEditavel}>
+                    <Text style={styles.valor}>
+                      {usuario?.tipoSanguineo || "Toque para informar"}
+                    </Text>
+                    <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                  </View>
+                </Pressable>
+
                 <View style={styles.linhaInfo}>
                   <Text style={styles.rotulo}>Função / Acesso</Text>
                   <Text style={styles.valor}>
@@ -270,6 +305,15 @@ export default function InformacoesPessoaisScreen({ navigation }) {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <OptionsSheet
+        visible={escolhendoSangue}
+        title="Tipo sanguíneo"
+        opcoes={OPCOES_TIPO_SANGUINEO}
+        valor={usuario?.tipoSanguineo ?? ""}
+        onSelect={escolherTipoSanguineo}
+        onClose={() => setEscolhendoSangue(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -332,6 +376,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     paddingBottom: 8,
     gap: 2,
+  },
+  linhaEditavel: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
   },
   rotulo: {
     fontFamily: fonts.regular,

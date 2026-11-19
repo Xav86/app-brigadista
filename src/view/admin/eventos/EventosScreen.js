@@ -22,6 +22,8 @@ import {
 import {
   RECORRENCIA_LABELS,
   STATUS_EVENTO,
+  descreverEquipe,
+  equipeIncompleta,
   formatarHorario,
   isRecorrente,
   proximaOcorrencia,
@@ -48,8 +50,8 @@ function ordenar(a, b) {
   return a.data - b.data;
 }
 
-function descreverEquipe(quantidade, evento) {
-  const equipe = `${quantidade} ${quantidade === 1 ? "brigadista" : "brigadistas"}`;
+function detalheDoCard(quantidade, evento) {
+  const equipe = descreverEquipe(quantidade, evento);
   if (!isRecorrente(evento)) return equipe;
   return `${equipe} · ${RECORRENCIA_LABELS[evento.recorrencia]}`;
 }
@@ -134,7 +136,10 @@ export default function EventosScreen({ navigation }) {
                   titulo={evento.nome}
                   horario={formatarHorario(evento)}
                   local={evento.local}
-                  detalhe={descreverEquipe(escalados, evento)}
+                  detalhe={detalheDoCard(escalados, evento)}
+                  detalheAlerta={
+                    status !== "encerrado" && equipeIncompleta(escalados, evento)
+                  }
                   statusLabel={STATUS_EVENTO[status].label}
                   statusTone={STATUS_EVENTO[status].tone}
                   passado={status === "encerrado"}
