@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   Alert,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -20,6 +21,7 @@ import { colors, fonts, radius, spacing } from "../../../theme";
 import { formatShortDate, formatTime, startOfDay } from "../../../utils/calendar";
 import { useAdminDados } from "../useAdminDados";
 import { ESPECIALIDADES_LABELS, useBrigadistas } from "./useBrigadistas";
+import FotoCertificado from "./FotoCertificado";
 
 const STATUS_ESCALA = {
   confirmado: { label: "Confirmado", tone: "success" },
@@ -160,7 +162,14 @@ export default function DetalhesBrigadistaScreen({ navigation, route }) {
         <Card style={styles.perfilCard}>
           <View style={styles.perfilTopo}>
             <View style={styles.avatar}>
-              <View style={styles.avatarDot} />
+              {brigadista.fotoUrl ? (
+                <Image
+                  source={{ uri: brigadista.fotoUrl }}
+                  style={styles.avatarFoto}
+                />
+              ) : (
+                <View style={styles.avatarDot} />
+              )}
             </View>
             <View style={styles.perfilInfo}>
               <Text style={styles.nome}>{brigadista.nome}</Text>
@@ -241,6 +250,10 @@ export default function DetalhesBrigadistaScreen({ navigation, route }) {
                     {avaliacao.aviso ? (
                       <Text style={styles.certAviso}>{avaliacao.aviso}</Text>
                     ) : null}
+
+                    <FotoCertificado
+                      uri={brigadista.fotosCertificados?.[cert.tipoCertificadoId]}
+                    />
                   </Card>
                 );
               })}
@@ -342,6 +355,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
+  },
+  avatarFoto: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
   },
   avatarDot: {
     width: 20,

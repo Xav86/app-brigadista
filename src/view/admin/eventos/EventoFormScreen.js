@@ -26,7 +26,6 @@ import {
   mascararNumero,
   parseDataBR,
 } from "../../../utils/formulario";
-import { TIPOS_CERTIFICADOS_PADRAO } from "../gestao/useBrigadistas";
 import { useAdminDados } from "../useAdminDados";
 import {
   REGRA_SEM_RECORRENCIA,
@@ -54,8 +53,7 @@ function Campo({ label, children, style }) {
 }
 
 export default function EventoFormScreen({ navigation, route }) {
-  const { buscarEvento, salvarEvento, excluirEvento } = useAdminDados();
-
+  const { buscarEvento, salvarEvento, excluirEvento, tiposCertificados } = useAdminDados();
   const eventoId = route.params?.eventoId;
   const editando = Boolean(eventoId);
   const existente = editando ? buscarEvento(eventoId) : null;
@@ -319,7 +317,12 @@ export default function EventoFormScreen({ navigation, route }) {
               Selecione uma ou mais certificações.
             </Text>
             <View style={styles.chips}>
-              {TIPOS_CERTIFICADOS_PADRAO.map((tipo) => {
+                {tiposCertificados.length === 0 ? (
+                <Text style={styles.cardTexto}>
+                  Nenhuma certificação cadastrada em Gestão → Certificados.
+                </Text>
+              ) : null}
+              {tiposCertificados.map((tipo) => {
                 const marcada = campos.certificacoes.includes(tipo.id);
                 return (
                   <Pressable

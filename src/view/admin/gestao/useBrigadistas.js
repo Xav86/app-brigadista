@@ -9,32 +9,6 @@ import {
   escutarUsuarios,
 } from "../../../services/firestore";
 
-export const TIPOS_CERTIFICADOS_PADRAO = [
-  {
-    id: "nr-23",
-    nome: "NR-23",
-    cargaHoraria: 8,
-    descricao: "Proteção Contra Incêndios",
-    validadeMeses: 12,
-    ativo: true,
-  },
-  {
-    id: "primeiros-socorros",
-    nome: "Primeiros Socorros",
-    cargaHoraria: 16,
-    descricao: "Atendimento Pré-Hospitalar Básico",
-    validadeMeses: 12,
-    ativo: true,
-  },
-  {
-    id: "combate-incendio",
-    nome: "Combate a Incêndio",
-    cargaHoraria: 12,
-    descricao: "Prevenção e Combate a Princípios de Incêndio",
-    validadeMeses: 24,
-    ativo: true,
-  },
-];
 
 export const ESPECIALIDADES_LABELS = {
   nenhum: "Nenhuma",
@@ -57,9 +31,7 @@ const BrigadistasContext = createContext(null);
 
 export function BrigadistasProvider({ children }) {
   const [brigadistas, setBrigadistas] = useState([]);
-  const [tiposCertificados, setTiposCertificados] = useState(
-    TIPOS_CERTIFICADOS_PADRAO,
-  );
+  const [tiposCertificados, setTiposCertificados] = useState([]);
 
     // todos os tipos cadastrados no firestore (ativos e inativos) para a tela de certificacoes.
   const [tiposCadastrados, setTiposCadastrados] = useState([]);
@@ -84,12 +56,7 @@ export function BrigadistasProvider({ children }) {
 
       setTiposCadastrados(lista); 
 
-      const ativos = lista.filter((t) => t.ativo);
-      if (ativos.length > 0) {
-        setTiposCertificados(ativos);
-      } else {
-        setTiposCertificados(TIPOS_CERTIFICADOS_PADRAO);
-      }
+      setTiposCertificados(lista.filter((t) => t.ativo));
     });
 
     return () => {

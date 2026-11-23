@@ -1,10 +1,9 @@
 import { parseIsoDate } from "../../../utils/calendar";
 import { certificadoVencido } from "../../../utils/certificados";
-import { TIPOS_CERTIFICADOS_PADRAO } from "../gestao/useBrigadistas";
 
-function nomeDoTipo(tipoId) {
+function nomeDoTipo(tiposCertificados, tipoId) {
   return (
-    TIPOS_CERTIFICADOS_PADRAO.find((tipo) => tipo.id === tipoId)?.nome ?? tipoId
+    tiposCertificados.find((tipo) => tipo.id === tipoId)?.nome ?? tipoId
   );
 }
 
@@ -17,6 +16,7 @@ export function montarCandidatos({
   solicitacoes,
   evento,
   dataIso,
+  tiposCertificados,
 }) {
   const dia = parseIsoDate(dataIso);
   const exigidas = evento?.certificacoes ?? [];
@@ -40,9 +40,9 @@ export function montarCandidatos({
         const certificado = brigadista.certificados.find(
           (item) => item.tipoCertificadoId === tipoId,
         );
-        if (!certificado) return `${nomeDoTipo(tipoId)} (não possui)`;
+        if (!certificado) return `${nomeDoTipo(tiposCertificados, tipoId)} (não possui)`;
         if (certificadoVencido(certificado, dia)) {
-          return `${nomeDoTipo(tipoId)} (vencida)`;
+          return `${nomeDoTipo(tiposCertificados, tipoId)} (vencida)`;
         }
         return null;
       })

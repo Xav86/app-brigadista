@@ -94,7 +94,7 @@ function Candidato({ candidato, marcado, onPress }) {
 }
 
 export default function AgendamentoManualScreen({ navigation, route }) {
-  const { eventos, brigadistas, escalas, solicitacoes, adicionarEscalas } =
+  const { eventos, brigadistas, escalas, solicitacoes, adicionarEscalas, tiposCertificados } =
     useAdminDados();
 
   const agora = new Date();
@@ -131,6 +131,7 @@ export default function AgendamentoManualScreen({ navigation, route }) {
           solicitacoes,
           evento,
           dataIso,
+          tiposCertificados,
         })
       : [];
   const disponiveis = candidatos.filter(

@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -22,10 +21,6 @@ import { colors, fonts, spacing } from "../../../theme";
 import { formatDateBR, parseIsoDate } from "../../../utils/calendar";
 import { diasParaVencer } from "../../../utils/certificados";
 
-// As fotos dos certificados ficam só neste aparelho (AsyncStorage):
-// um objeto { [tipoCertificadoId]: uri } salvo como JSON, um por e-mail.
-export const CHAVE_FOTOS_CERTIFICADOS = "@certificadosFotos:";
-
 function situacao(dataValidadeIso) {
   const dias = diasParaVencer(dataValidadeIso);
   if (dias < 0) return { label: "Vencido", tone: "primary" };
@@ -35,7 +30,6 @@ function situacao(dataValidadeIso) {
 
 export default function CertificacoesScreen({ navigation }) {
   const [usuario, setUsuario] = useState(null);
-  const [fotos, setFotos] = useState({});
   const [carregando, setCarregando] = useState(true);
 
   const email = auth.currentUser?.email?.toLowerCase();
@@ -52,22 +46,9 @@ export default function CertificacoesScreen({ navigation }) {
     return pararDeEscutar;
   }, []);
 
-  // Sempre que o usuário muda (ex.: depois de enviar), recarrega as fotos salvas no aparelho.
-  useEffect(() => {
-    async function carregarFotos() {
-      try {
-        const json = await AsyncStorage.getItem(CHAVE_FOTOS_CERTIFICADOS + email);
-        if (json !== null) {
-          setFotos(JSON.parse(json));
-        }
-      } catch (e) {
-        console.warn("Erro ao carregar as fotos dos certificados:", e);
-      }
-    }
-    carregarFotos();
-  }, [usuario]);
-
   const certificados = usuario?.certificados ?? [];
+  //fotos ficam no proprio usuaio no firestore: { [tipoCertificadoId]: "data:image/jpeg;base64,..." }
+  const fotos = usuario?.fotosCertificados ?? {};
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>

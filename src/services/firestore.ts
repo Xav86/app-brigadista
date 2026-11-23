@@ -103,6 +103,7 @@ export async function buscarUsuarioPorEmail(
     especialidade: raw.especialidade ?? "nenhum",
     fcmTokens: Array.isArray(raw.fcmTokens) ? raw.fcmTokens : [],
     certificados: Array.isArray(raw.certificados) ? raw.certificados : [],
+    fotosCertificados: raw.fotosCertificados ?? {},
     fotoUrl: typeof raw.fotoUrl === "string" ? raw.fotoUrl : "",
     tipoSanguineo: raw.tipoSanguineo ?? "",
     ativo: raw.ativo !== false,
@@ -149,6 +150,16 @@ export async function salvarTipoSanguineo(
   tipoSanguineo: string,
 ): Promise<void> {
   await updateDoc(doc(db, COLECOES.USUARIOS, id), { tipoSanguineo });
+}
+
+export async function salvarFotoCertificado(
+  id: string,
+  tipoCertificadoId: string,
+  foto: string,
+): Promise<void> {
+  await updateDoc(doc(db, COLECOES.USUARIOS, id), {
+    [`fotosCertificados.${tipoCertificadoId}`]: foto,
+  });
 }
 
 export async function adicionarTipoCertificado(
@@ -201,7 +212,16 @@ export async function atualizarEvento(
   return { id, ...validado };
 }
 
+//isa - apaga tb se os brigadistas ja se inscreveram p nao aparecer mais na escala eles 
 export async function excluirEvento(id: string): Promise<void> {
+  const escalasDoEvento = await getDocs(
+    query(collection(db, COLECOES.ESCALAS), where("eventoId", "==", id)),
+  );
+  await Promise.all(
+    escalasDoEvento.docs.map((docSnap) =>
+      deleteDoc(doc(db, COLECOES.ESCALAS, docSnap.id)),
+    ),
+  );
   await deleteDoc(doc(db, COLECOES.EVENTOS, id));
 }
 
@@ -420,6 +440,8 @@ export function escutarUsuarios(
           especialidade: raw.especialidade ?? "nenhum",
           fcmTokens: Array.isArray(raw.fcmTokens) ? raw.fcmTokens : [],
           certificados: Array.isArray(raw.certificados) ? raw.certificados : [],
+          fotosCertificados: raw.fotosCertificados ?? {},
+          fotoUrl: typeof raw.fotoUrl === "string" ? raw.fotoUrl : "",
           tipoSanguineo: raw.tipoSanguineo ?? "",
           ativo: raw.ativo !== false,
           criadoEm: paraDate(raw.criadoEm),

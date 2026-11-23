@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -167,9 +168,16 @@ export default function BrigadistasScreen({ navigation }) {
                         ]}
                       >
                         <View style={styles.avatar}>
-                          <Text style={styles.avatarText}>
-                            {extrairIniciais(item.nome)}
-                          </Text>
+                          {item.fotoUrl ? (
+                            <Image
+                              source={{ uri: item.fotoUrl }}
+                              style={styles.avatarFoto}
+                            />
+                          ) : (
+                            <Text style={styles.avatarText}>
+                              {extrairIniciais(item.nome)}
+                            </Text>
+                          )}
                         </View>
 
                         <View style={styles.info}>
@@ -374,6 +382,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
+  },
+  avatarFoto: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   avatarText: {
     fontFamily: fonts.bold,

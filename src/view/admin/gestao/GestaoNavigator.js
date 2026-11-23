@@ -8,6 +8,7 @@ import NovoBrigadistaScreen from "./NovoBrigadistaScreen";
 import InformacoesPessoaisScreen from "../../perfil/InformacoesPessoaisScreen";
 import { BrigadistasProvider } from "./useBrigadistas";
 
+import CertificadoDetalhesScreen from "./CertificadoDetalhesScreen";
 import CertificacoesScreen from "./CertificacoesScreen";
 import CertificadoFormScreen from "./CertificadoFormScreen";
 
@@ -27,6 +28,7 @@ export default function GestaoNavigator({ onLogout }) {
           component={DetalhesBrigadistaScreen}
         />
         <Stack.Screen name="Certificacoes" component={CertificacoesScreen} />
+        <Stack.Screen name="CertificadoDetalhes" component={CertificadoDetalhesScreen}/>
         <Stack.Screen name="CertificadoForm" component={CertificadoFormScreen} />
         <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
         <Stack.Screen

@@ -115,6 +115,7 @@ export interface Usuario {
   especialidade: StatusEspecialidade;
   fcmTokens: string[]; // Tokens para notificação push (Req 11)
   certificados: CertificadoBrigadista[]; // Sub-documentos embutidos
+  fotosCertificados?: Record<string, string>; // { [tipoCertificadoId]: foto em base64 }
   criadoEm: Date; // Timestamp do Firebase
   fotoUrl?: string; // foto de perfil
   tipoSanguineo?: TipoSanguineo; // "" = não informado

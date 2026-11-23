@@ -95,7 +95,7 @@ export default function CertificacoesScreen({ navigation }) {
                   <Pressable
                     key={tipo.id}
                     onPress={() =>
-                      navigation.navigate("CertificadoForm", {
+                      navigation.navigate("CertificadoDetalhes", {
                         tipoId: tipo.id,
                       })
                     }

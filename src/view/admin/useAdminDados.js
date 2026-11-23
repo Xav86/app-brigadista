@@ -11,6 +11,7 @@ import {
   escutarSolicitacoes,
   escutarUsuarios,
   excluirEscala,
+  escutarTiposCertificados,
   excluirEvento as excluirEventoNoBanco,
   responderSolicitacoesNoBanco,
 } from "../../services/firestore";
@@ -43,6 +44,7 @@ export function AdminDadosProvider({ children }) {
   const [usuariosBanco, setUsuariosBanco] = useState([]);
   const [escalas, setEscalas] = useState([]);
   const [solicitacoes, setSolicitacoes] = useState([]);
+  const [tiposCertificados, setTiposCertificados] = useState([]);
 
   // Escuta a coleção "eventos"
   useEffect(() => {
@@ -57,6 +59,14 @@ export function AdminDadosProvider({ children }) {
         setCarregandoEventos(false);
       },
     );
+    return pararDeEscutar;
+  }, []);
+
+  // Escuta a coleção "tipos_certificados": só os tipos ativos cadastrados pelo admin.
+  useEffect(() => {
+    const pararDeEscutar = escutarTiposCertificados((lista) => {
+      setTiposCertificados(lista.filter((tipo) => tipo.ativo));
+    });
     return pararDeEscutar;
   }, []);
 
@@ -275,6 +285,7 @@ export function AdminDadosProvider({ children }) {
         erroEventos,
         escalas,
         solicitacoes,
+        tiposCertificados,
         buscarEvento,
         buscarBrigadista,
         escalasDoEvento,

@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
 import {
@@ -15,6 +15,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import {
+  formatDateBR,
+  parseIsoDate,
+  startOfDay,
+  toIsoDate,
+} from "../../../utils/calendar";
+
 import Button from "../../../components/Button";
 import Card from "../../../components/Card";
 import OptionsSheet from "../../../components/OptionsSheet";
@@ -25,11 +32,10 @@ import {
   atualizarUsuarioNoBanco,
   buscarUsuarioPorEmail,
   escutarTiposCertificados,
+  salvarFotoCertificado,
 } from "../../../services/firestore";
 import { colors, fonts, radius, spacing } from "../../../theme";
-import { formatDateBR, parseIsoDate, toIsoDate } from "../../../utils/calendar";
 import { mascararData, parseDataBR } from "../../../utils/formulario";
-import { CHAVE_FOTOS_CERTIFICADOS } from "./CertificacoesScreen";
 
 // Alert.alert simples não aparece no Expo Web, então lá usamos o alert do navegador.
 function avisar(titulo, mensagem) {
@@ -86,11 +92,8 @@ export default function EnviarCertificadoScreen({ navigation, route }) {
           setNomeAtual(cert.nomeCertificado);
           setVencimento(formatDateBR(parseIsoDate(cert.dataValidade)));
         }
-        const json = await AsyncStorage.getItem(CHAVE_FOTOS_CERTIFICADOS + email);
-        if (json !== null) {
-          const fotos = JSON.parse(json);
-          if (fotos[tipoInicial]) setFoto(fotos[tipoInicial]);
-        }
+        const fotoSalva = usuario?.fotosCertificados?.[tipoInicial];
+        if (fotoSalva) setFoto(fotoSalva);
       } catch (e) {
         console.warn("Erro ao carregar o certificado:", e);
       }
@@ -118,17 +121,33 @@ export default function EnviarCertificadoScreen({ navigation, route }) {
 
     if (resultado.canceled) return;
 
-    setFoto(resultado.assets[0].uri);
-    setErros({ ...erros, foto: null });
+    // Mesmo esquema da foto de perfil: diminui a imagem e transforma em texto (base64)
+    // para salvar no documento do usuário no Firestore.
+    try {
+      const reduzida = await ImageManipulator.manipulateAsync(
+        resultado.assets[0].uri,
+        [{ resize: { width: 600 } }],
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true },
+      );
+      setFoto(`data:image/jpeg;base64,${reduzida.base64}`);
+      setErros({ ...erros, foto: null });
+    } catch (e) {
+      avisar("Não foi possível usar a foto", "Tente escolher outra imagem.");
+    }
   }
 
   function validar() {
     const novosErros = {};
     if (!tipoId) novosErros.tipo = "Selecione o tipo de certificado.";
     if (!foto) novosErros.foto = "Escolha a foto do certificado.";
-    if (!parseDataBR(vencimento)) {
+
+    const dataVencimento = parseDataBR(vencimento);
+    if (!dataVencimento) {
       novosErros.vencimento = "Informe uma data válida (DD/MM/AAAA).";
+    } else if (dataVencimento < startOfDay(new Date())) {
+      novosErros.vencimento = "A data de vencimento não pode ser menor que o dia atual.";
     }
+
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   }
@@ -138,18 +157,13 @@ export default function EnviarCertificadoScreen({ navigation, route }) {
 
     setSalvando(true);
     try {
-      // 1) Foto: guarda o endereço da imagem no aparelho.
-      const json = await AsyncStorage.getItem(CHAVE_FOTOS_CERTIFICADOS + email);
-      const fotos = json !== null ? JSON.parse(json) : {};
-      await AsyncStorage.setItem(
-        CHAVE_FOTOS_CERTIFICADOS + email,
-        JSON.stringify({ ...fotos, [tipoId]: foto }),
-      );
-
-      // 2) Dados: salva o certificado no perfil do brigadista no Firestore.
       const usuario = await buscarUsuarioPorEmail(email);
       if (!usuario) throw new Error("Usuário não encontrado.");
 
+      // 1) Foto: salva no documento do usuário, em fotosCertificados.<tipoId>.
+      await salvarFotoCertificado(usuario.id, tipoId, foto);
+
+      // 2) Dados: salva o certificado no perfil do brigadista no Firestore.
       const antigo = usuario.certificados.find(
         (c) => c.tipoCertificadoId === tipoId,
       );
@@ -207,7 +221,7 @@ export default function EnviarCertificadoScreen({ navigation, route }) {
                     pressed && styles.cardPressed,
                   ]}
                 >
-                                    <Text
+                  <Text
                     style={[
                       styles.seletorTexto,
                       !nomeTipo && styles.placeholder,
