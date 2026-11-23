@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -66,12 +66,13 @@ export default function EventoFormScreen({ navigation, route }) {
 
   // A tela de recorrência devolve a regra escolhida pelos params desta rota.
   const regraRecebida = route.params?.regraRecorrencia;
-  useEffect(() => {
-    if (regraRecebida) {
-      setCampos((atuais) => ({ ...atuais, regra: regraRecebida }));
-      setErros((atuais) => ({ ...atuais, regra: undefined }));
-    }
-  }, [regraRecebida]);
+  const [regraAplicada, setRegraAplicada] = useState(null);
+
+  if (regraRecebida && regraRecebida !== regraAplicada) {
+    setRegraAplicada(regraRecebida);
+    setCampos((atuais) => ({ ...atuais, regra: regraRecebida }));
+    setErros((atuais) => ({ ...atuais, regra: undefined }));
+  }
 
   function alterar(campo, valor) {
     setCampos((atuais) => ({ ...atuais, [campo]: valor }));

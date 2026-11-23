@@ -35,7 +35,8 @@
         {
           "faceIDPermission": "Permitir que o Brigadista use o Face ID para entrar no app."
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "scheme": "brigadista"
   }
