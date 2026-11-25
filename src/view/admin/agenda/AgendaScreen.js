@@ -28,7 +28,7 @@ export default function AgendaScreen({ navigation }) {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Agenda</Text>
-        <Text style={styles.lead}>Toque em um dia para ver os eventos.</Text>
+        <Text style={styles.lead}>Toque em um dia para ver os eventos e montar as escalas.</Text>
       </View>
 
       <View style={styles.calendario}>

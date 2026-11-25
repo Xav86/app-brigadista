@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { Alert, Platform } from "react-native";
 
 import { auth } from "../../services/firebase";
 import {
   adicionarEscala,
   adicionarEvento,
+  atualizarDadosEscala,
   atualizarEvento,
   atualizarStatusEscala,
   escutarEscalas,
@@ -21,6 +23,9 @@ import { ocorrenciasNoMes } from "../../utils/eventos";
 // Estado compartilhado entre as abas do administrador (Início, Eventos, Agenda).
 // Todos os dados (eventos, brigadistas, escalas e solicitações) vêm do Firestore em tempo real.
 const AdminDadosContext = createContext(null);
+
+const ERRO_CARREGAR =
+  "Não foi possível carregar os dados do sistema. Verifique sua conexão e tente novamente.";
 
 function montarDataHoraServico(dataIso, evento) {
   const base = parseIsoDate(dataIso);
@@ -45,6 +50,21 @@ export function AdminDadosProvider({ children }) {
   const [escalas, setEscalas] = useState([]);
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [tiposCertificados, setTiposCertificados] = useState([]);
+  const [erroDados, setErroDados] = useState(null);
+
+  // Se alguma coleção não carregar, avisa o admin uma vez (em vez de só deixar a tela vazia).
+  useEffect(() => {
+    if (!erroDados) return;
+    if (Platform.OS === "web") {
+      window.alert(`Erro ao carregar\n${erroDados}`);
+    } else {
+      Alert.alert("Erro ao carregar", erroDados);
+    }
+  }, [erroDados]);
+
+  function avisarErroAoCarregar() {
+    setErroDados(ERRO_CARREGAR);
+  }
 
   // Escuta a coleção "eventos"
   useEffect(() => {
@@ -66,7 +86,7 @@ export function AdminDadosProvider({ children }) {
   useEffect(() => {
     const pararDeEscutar = escutarTiposCertificados((lista) => {
       setTiposCertificados(lista.filter((tipo) => tipo.ativo));
-    });
+    }, avisarErroAoCarregar);
     return pararDeEscutar;
   }, []);
 
@@ -74,7 +94,7 @@ export function AdminDadosProvider({ children }) {
   useEffect(() => {
     const pararDeEscutar = escutarUsuarios((lista) => {
       setUsuariosBanco(lista);
-    });
+    }, avisarErroAoCarregar);
     return pararDeEscutar;
   }, []);
 
@@ -82,7 +102,7 @@ export function AdminDadosProvider({ children }) {
   useEffect(() => {
     const pararDeEscutar = escutarEscalas((lista) => {
       setEscalas(lista);
-    });
+    }, avisarErroAoCarregar);
     return pararDeEscutar;
   }, []);
 
@@ -90,7 +110,7 @@ export function AdminDadosProvider({ children }) {
   useEffect(() => {
     const pararDeEscutar = escutarSolicitacoes((lista) => {
       setSolicitacoes(lista);
-    });
+    }, avisarErroAoCarregar);
     return pararDeEscutar;
   }, []);
 
@@ -143,10 +163,41 @@ export function AdminDadosProvider({ children }) {
     }
 
     const existente = buscarEvento(id);
-    return atualizarEvento(id, {
+    const salvo = await atualizarEvento(id, {
       notificacoesAtivas: existente?.notificacoesAtivas ?? true,
       ...dados,
     });
+    await atualizarEscalasDoEvento(id, dados);
+    return salvo;
+  }
+
+  // Depois de editar um evento, as escalas futuras recebem o nome, o local e o
+  // horário novos. Se o evento deixou de acontecer em algum dia (mudou a data ou
+  // a recorrência), a escala desse dia é apagada para não ficar perdida.
+  async function atualizarEscalasDoEvento(eventoId, dados) {
+    const hojeIso = toIsoDate(new Date());
+    const futuras = escalas.filter(
+      (esc) => esc.eventoId === eventoId && esc.data >= hojeIso,
+    );
+
+    await Promise.all(
+      futuras.map((esc) => {
+        const dia = parseIsoDate(esc.data);
+        const aindaAcontece = ocorrenciasNoMes(
+          dados,
+          dia.getFullYear(),
+          dia.getMonth(),
+        ).some((ocorrencia) => toIsoDate(ocorrencia) === esc.data);
+
+        if (!aindaAcontece) return excluirEscala(esc.id);
+
+        return atualizarDadosEscala(esc.id, {
+          eventoNome: dados.nome,
+          eventoLocal: dados.local,
+          dataHoraServico: montarDataHoraServico(esc.data, dados),
+        });
+      }),
+    );
   }
 
   // Escala os brigadistas no evento para o dia informado (agendamento manual do admin).
@@ -183,6 +234,11 @@ export function AdminDadosProvider({ children }) {
     );
 
     return criadas;
+  }
+
+  // Tira o brigadista da escala do evento (apaga o documento da coleção "escalas").
+  async function removerEscala(escalaId) {
+    await excluirEscala(escalaId);
   }
 
   // Aprova ou recusa uma ou mais solicitações de disponibilidade de uma vez no Firestore.
@@ -293,6 +349,7 @@ export function AdminDadosProvider({ children }) {
         salvarEvento,
         excluirEvento,
         adicionarEscalas,
+        removerEscala,
         responderSolicitacoes,
       }}
     >

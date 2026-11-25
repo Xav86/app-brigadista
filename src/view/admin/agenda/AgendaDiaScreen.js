@@ -92,18 +92,13 @@ export default function AgendaDiaScreen({ navigation, route }) {
     (a, b) => minutosDoDia(a.dataInicio) - minutosDoDia(b.dataInicio),
   );
 
-  function abrirEvento(eventoId) {
-    navigation.getParent()?.navigate("Eventos", {
-      screen: "EventoForm",
-      params: { eventoId },
-    });
+  // Abre a escala do evento nesse dia, onde o admin adiciona ou remove brigadistas.
+  function abrirEscala(eventoId) {
+    navigation.navigate("EscalaEvento", { eventoId, data: diaIso });
   }
 
   function novoEvento() {
-    navigation.getParent()?.navigate("Eventos", {
-      screen: "EventoForm",
-      params: { dataInicial: diaIso },
-    });
+    navigation.navigate("EventoForm", { dataInicial: diaIso });
   }
 
   return (
@@ -124,7 +119,7 @@ export default function AgendaDiaScreen({ navigation, route }) {
                 escalas={escalasDoEvento(evento.id).filter(
                   (item) => item.data === diaIso,
                 )}
-                onPress={() => abrirEvento(evento.id)}
+                onPress={() => abrirEscala(evento.id)}
               />
             ))}
           </View>

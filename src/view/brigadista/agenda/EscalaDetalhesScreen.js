@@ -5,13 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Card from "../../../components/Card";
 import StatusPill from "../../../components/StatusPill";
 import { colors, fonts, radius, spacing } from "../../../theme";
-
-const DETALHES_PADRAO = {
-  descricao: "Escala de serviço e apoio operacional da brigada.",
-  funcao: "Brigadista",
-  responsavel: "Coordenação da Brigada",
-  certificacoes: [],
-};
+import { useBrigadistaDados } from "../useBrigadistaDados";
 
 const STATUS = {
   confirmado: {
@@ -56,13 +50,50 @@ function InfoLinha({ label, valor }) {
 }
 
 export default function EscalaDetalhesScreen({ navigation, route }) {
-  const { escala } = route.params;
-  const descricao = escala.descricao || DETALHES_PADRAO.descricao;
-  const funcao = escala.funcao || DETALHES_PADRAO.funcao;
-  const responsavel = escala.responsavel || DETALHES_PADRAO.responsavel;
+  const { escala: escalaAberta } = route.params;
+  const { escalas } = useBrigadistaDados();
+
+  // Busca a escala na lista em tempo real, para mostrar o status atual
+  // mesmo que o administrador mude algo com a tela aberta.
+  const escala = escalas.find(
+    (item) =>
+      item.eventoId === escalaAberta.eventoId &&
+      item.dataIso === escalaAberta.dataIso,
+  );
+
+  const cabecalho = (
+    <View style={styles.header}>
+      <Pressable
+        style={styles.voltar}
+        onPress={() => navigation.goBack()}
+        hitSlop={8}
+      >
+        <Feather name="arrow-left" size={15} color={colors.text} />
+      </Pressable>
+      <Text style={styles.title}>Detalhes da escala</Text>
+    </View>
+  );
+
+  if (!escala) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <View style={styles.content}>
+          {cabecalho}
+          <View style={styles.vazio}>
+            <Feather name="calendar" size={22} color={colors.textFaint} />
+            <Text style={styles.vazioTexto}>
+              Esta escala não está mais na sua agenda. O administrador pode ter
+              removido você ou o evento.
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const certificacoes = Array.isArray(escala.certificacoes)
     ? escala.certificacoes
-    : DETALHES_PADRAO.certificacoes;
+    : [];
 
   const status = STATUS[escala.status] ?? STATUS.pendente;
   const tone = TONES[status.tone] ?? TONES.warning;
@@ -70,18 +101,7 @@ export default function EscalaDetalhesScreen({ navigation, route }) {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Pressable
-            style={styles.voltar}
-            onPress={() => navigation.goBack()}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar"
-          >
-            <Feather name="arrow-left" size={15} color={colors.text} />
-          </Pressable>
-          <Text style={styles.title}>Detalhes da escala</Text>
-        </View>
+        {cabecalho}
 
         <ScrollView contentContainerStyle={styles.main}>
           <Card tinted style={styles.resumo}>
@@ -91,9 +111,11 @@ export default function EscalaDetalhesScreen({ navigation, route }) {
             </View>
             <View style={styles.resumoTextos}>
               <Text style={styles.titulo}>{escala.titulo}</Text>
-              <Text style={styles.descricao} numberOfLines={2}>
-                {descricao}
-              </Text>
+              {escala.descricao ? (
+                <Text style={styles.descricao} numberOfLines={2}>
+                  {escala.descricao}
+                </Text>
+              ) : null}
             </View>
             <StatusPill label={status.pill} tone={status.tone} />
           </Card>
@@ -102,8 +124,6 @@ export default function EscalaDetalhesScreen({ navigation, route }) {
             <Text style={styles.secaoTitulo}>Informações do evento</Text>
             <InfoLinha label="Horário" valor={escala.horario} />
             <InfoLinha label="Local" valor={escala.local} />
-            <InfoLinha label="Função" valor={funcao} />
-            <InfoLinha label="Responsável" valor={responsavel} />
           </Card>
 
           <Card style={styles.secao}>
@@ -155,6 +175,17 @@ export default function EscalaDetalhesScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
+  vazio: {
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 32,
+  },
+  vazioTexto: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: colors.textMuted,
+    textAlign: "center",
+  },
   safe: {
     flex: 1,
     backgroundColor: colors.background,

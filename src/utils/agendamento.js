@@ -1,5 +1,5 @@
-import { parseIsoDate } from "../../../utils/calendar";
-import { certificadoVencido } from "../../../utils/certificados";
+import { parseIsoDate } from "./calendar";
+import { certificadoVencido } from "./certificados";
 
 function nomeDoTipo(tiposCertificados, tipoId) {
   return (

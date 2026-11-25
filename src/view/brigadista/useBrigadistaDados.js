@@ -13,6 +13,7 @@ import {
   escutarSolicitacoes,
   escutarTiposCertificados,
   escutarUsuarios,
+  responderSolicitacoesNoBanco,
 } from "../../services/firestore";
 import {
   formatShortDate,
@@ -182,14 +183,10 @@ export function BrigadistaDadosProvider({ children }) {
         dia,
         mes,
         titulo: evento?.nome || esc.eventoNome || "Evento da Brigada",
-        descricao:
-          evento?.descricao ||
-          "Escala de serviço e apoio operacional da brigada.",
+        descricao: evento?.descricao || "",
         horario,
         local: evento?.local || esc.eventoLocal || "Local a definir",
         status: statusExibicao,
-        funcao: "Brigadista",
-        responsavel: "Coordenação da Brigada",
         certificacoes: resolverNomesCertificacoes(
           evento?.certificacoes ?? [],
           tiposCertificados,
@@ -219,16 +216,12 @@ export function BrigadistaDadosProvider({ children }) {
           dia,
           mes,
           titulo: evento?.nome || sol.eventoNome || "Evento da Brigada",
-          descricao:
-            evento?.descricao ||
-            "Escala de serviço e apoio operacional da brigada.",
+          descricao: evento?.descricao || "",
           horario: evento
             ? formatarHorario(evento)
             : sol.eventoHorario || "08:00 - 12:00",
           local: evento?.local || sol.eventoLocal || "Local a definir",
           status: statusExibicao,
-          funcao: "Brigadista",
-          responsavel: "Coordenação da Brigada",
           certificacoes: resolverNomesCertificacoes(
             evento?.certificacoes ?? [],
             tiposCertificados,
@@ -389,6 +382,27 @@ export function BrigadistaDadosProvider({ children }) {
     const escalaExistente = escalasBanco.find(
       (esc) => esc.eventoId === eventoIdReal && esc.data === dataIso,
     );
+    // Pedido deste evento/dia que o admin ainda não respondeu.
+    const pedidoAberto = solicitacoesBanco.find(
+      (sol) =>
+        sol.eventoId === eventoIdReal &&
+        sol.datas.includes(dataIso) &&
+        sol.status === "pendente",
+    );
+
+    // Evita pedidos repetidos na tela de Solicitações do admin.
+    if (resposta === "disponivel") {
+      if (escalaExistente?.status === "confirmado") {
+        throw new Error("Você já está confirmado neste evento.");
+      }
+      if (escalaExistente?.status === "pendente" || pedidoAberto) {
+        throw new Error(
+          "Você já enviou sua disponibilidade para este evento. Aguarde a resposta do administrador.",
+        );
+      }
+    } else if (escalaExistente?.status === "recusado" && !pedidoAberto) {
+      throw new Error("Você já informou que não pode participar deste evento.");
+    }
 
     if (resposta === "disponivel") {
       await adicionarSolicitacao({
@@ -434,6 +448,15 @@ export function BrigadistaDadosProvider({ children }) {
     } else {
       if (escalaExistente) {
         await atualizarStatusEscala(escalaExistente.id, "recusado");
+      }
+      // Se já existia um pedido esperando o admin, ele é fechado em vez de criar outro.
+      if (pedidoAberto) {
+        await responderSolicitacoesNoBanco(
+          [pedidoAberto.id],
+          "recusada",
+          "Indisponibilidade informada pelo brigadista",
+        );
+        return;
       }
       await adicionarSolicitacao({
         brigadistaId: brigadista.id,

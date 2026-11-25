@@ -270,6 +270,18 @@ export async function atualizarStatusEscala(
   });
 }
 
+// Copia nome, local e horário do evento editado para uma escala que já existe.
+export async function atualizarDadosEscala(
+  id: string,
+  campos: { eventoNome: string; eventoLocal: string; dataHoraServico: Date },
+): Promise<void> {
+  await updateDoc(doc(db, COLECOES.ESCALAS, id), {
+    eventoNome: campos.eventoNome,
+    eventoLocal: campos.eventoLocal,
+    dataHoraServico: Timestamp.fromDate(campos.dataHoraServico),
+  });
+}
+
 export async function excluirEscala(id: string): Promise<void> {
   await deleteDoc(doc(db, COLECOES.ESCALAS, id));
 }

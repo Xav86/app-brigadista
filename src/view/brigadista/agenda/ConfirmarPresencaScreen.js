@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "../../../components/Button";
@@ -21,10 +21,14 @@ export default function ConfirmarPresencaScreen({ navigation, route }) {
       await responderPresencaEvento(evento, resposta);
       navigation.replace("PedidoEnviado", { evento, resposta });
     } catch (erro) {
-      Alert.alert(
-        "Não foi possível enviar",
-        erro?.message || "Verifique sua conexão e tente novamente.",
-      );
+      const mensagem =
+        erro?.message || "Verifique sua conexão e tente novamente.";
+      // Alert.alert simples não aparece no Expo Web, então lá usamos o alert do navegador.
+      if (Platform.OS === "web") {
+        window.alert(`Não foi possível enviar\n${mensagem}`);
+      } else {
+        Alert.alert("Não foi possível enviar", mensagem);
+      }
     } finally {
       setEnviando(null);
     }
