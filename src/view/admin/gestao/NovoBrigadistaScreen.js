@@ -306,7 +306,7 @@ export default function NovoBrigadistaScreen({ navigation, route }) {
         await atualizarBrigadista(existente.id, dadosUsuario);
       } else {
         // Cria autenticação primeiro (senha inicial = dígitos do CPF)
-        await cadastrarUsuarioAuthSemLogin(email.trim().toLowerCase(), cpfDigitos);
+        await cadastrarUsuarioAuthSemLogin(email.trim().toLowerCase(), cpf.slice(0, 6));
         // Persiste dados no Firestore
         await adicionarBrigadista(dadosUsuario);
       }
