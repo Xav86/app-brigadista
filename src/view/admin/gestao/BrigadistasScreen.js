@@ -20,34 +20,58 @@ import {
   extrairIniciais,
   useBrigadistas,
 } from "./useBrigadistas";
-
-const FILTROS = ["todos", "profissional", "voluntario"];
+import FiltrosBrigadistasSheet, {
+  bateFiltros,
+  contarFiltros,
+  FILTROS_VAZIOS,
+} from "./FiltrosBrigadistasSheet";
 
 export default function BrigadistasScreen({ navigation }) {
-  const { brigadistas, loading, erro } = useBrigadistas();
+  const { brigadistas, tiposCertificados, loading, erro } = useBrigadistas();
   const [busca, setBusca] = useState("");
-  const [filtroIdx, setFiltroIdx] = useState(0);
+  const [filtros, setFiltros] = useState(FILTROS_VAZIOS);
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
 
-  const filtroAtual = FILTROS[filtroIdx];
+  // Admins também ficam na coleção de usuários, mas não são brigadistas.
+  const equipe = brigadistas.filter((b) => b.tipoUsuario !== "admin");
 
-  const filtrados = brigadistas.filter((b) => {
+  function filtrar(filtrosAplicados) {
     const termo = busca.trim().toLowerCase();
-    const bateBusca =
-      !termo ||
-      b.nome?.toLowerCase().includes(termo) ||
-      b.email?.toLowerCase().includes(termo) ||
-      b.cpf?.toLowerCase().includes(termo);
+    return equipe.filter((b) => {
+      const bateBusca =
+        !termo ||
+        b.nome?.toLowerCase().includes(termo) ||
+        b.email?.toLowerCase().includes(termo) ||
+        b.cpf?.toLowerCase().includes(termo);
 
-    const bateFiltro =
-      filtroAtual === "todos" ||
-      (filtroAtual === "profissional" && b.isProfissional) ||
-      (filtroAtual === "voluntario" && !b.isProfissional);
+      return bateBusca && bateFiltros(b, filtrosAplicados);
+    });
+  }
 
-    return bateBusca && bateFiltro;
-  });
+  const filtrados = filtrar(filtros);
+  const qtdFiltros = contarFiltros(filtros);
 
-  function alternarFiltro() {
-    setFiltroIdx((atual) => (atual + 1) % FILTROS.length);
+  // Um chip por filtro aplicado, para dar pra ver e remover direto na tela.
+  const nomeCertificado = tiposCertificados.find(
+    (t) => t.id === filtros.certificadoId,
+  )?.nome;
+  const chipsAtivos = [
+    filtros.status && {
+      campo: "status",
+      label: filtros.status === "ativo" ? "Ativos" : "Inativos",
+    },
+    filtros.sanguineo && {
+      campo: "sanguineo",
+      label: `Sangue ${filtros.sanguineo}`,
+    },
+    filtros.certificadoId && {
+      campo: "certificadoId",
+      label: nomeCertificado ?? "Certificado",
+    },
+  ].filter(Boolean);
+
+  function removerFiltro(campo) {
+    setFiltros((atual) => ({ ...atual, [campo]: "" }));
   }
 
   return (
@@ -102,20 +126,52 @@ export default function BrigadistasScreen({ navigation }) {
             autoCorrect={false}
           />
           <Pressable
-            onPress={alternarFiltro}
+            style={styles.filtroBotao}
+            onPress={() => setFiltrosAbertos(true)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Filtrar brigadistas"
+            accessibilityLabel={
+              qtdFiltros
+                ? `Filtrar brigadistas, ${qtdFiltros} aplicados`
+                : "Filtrar brigadistas"
+            }
           >
             <Feather
               name="sliders"
               size={18}
-              color={
-                filtroAtual !== "todos" ? colors.primary : colors.textMuted
-              }
+              color={qtdFiltros ? colors.primary : colors.textMuted}
             />
+            {qtdFiltros ? (
+              <View style={styles.filtroBadge}>
+                <Text style={styles.filtroBadgeText}>{qtdFiltros}</Text>
+              </View>
+            ) : null}
           </Pressable>
         </View>
+
+        {chipsAtivos.length ? (
+          <View style={styles.chipsAtivos}>
+            {chipsAtivos.map((chip) => (
+              <Pressable
+                key={chip.campo}
+                style={styles.chipAtivo}
+                onPress={() => removerFiltro(chip.campo)}
+                accessibilityRole="button"
+                accessibilityLabel={`Remover filtro ${chip.label}`}
+              >
+                <Text style={styles.chipAtivoText}>{chip.label}</Text>
+                <Feather name="x" size={12} color={colors.primary} />
+              </Pressable>
+            ))}
+            <Pressable
+              onPress={() => setFiltros(FILTROS_VAZIOS)}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
+              <Text style={styles.limparTudo}>Limpar</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Equipe cadastrada</Text>
@@ -230,6 +286,21 @@ export default function BrigadistasScreen({ navigation }) {
                   </Pressable>
                 );
               })
+            ) : equipe.length && (qtdFiltros || busca.trim()) ? (
+              <View style={styles.vazioWrap}>
+                <Text style={styles.vazio}>
+                  Nenhum brigadista encontrado com esses filtros.
+                </Text>
+                <Pressable
+                  onPress={() => {
+                    setFiltros(FILTROS_VAZIOS);
+                    setBusca("");
+                  }}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.limparTudo}>Limpar busca e filtros</Text>
+                </Pressable>
+              </View>
             ) : (
               <Text style={styles.vazio}>
                 Nenhum brigadista cadastrado no banco ainda.
@@ -245,6 +316,15 @@ export default function BrigadistasScreen({ navigation }) {
           style={styles.ctaNovo}
         />
       </ScrollView>
+
+      <FiltrosBrigadistasSheet
+        visible={filtrosAbertos}
+        filtros={filtros}
+        tiposCertificados={tiposCertificados}
+        contar={(f) => filtrar(f).length}
+        onAplicar={setFiltros}
+        onClose={() => setFiltrosAbertos(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -326,6 +406,56 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
+  },
+  filtroBotao: {
+    padding: 2,
+  },
+  filtroBadge: {
+    position: "absolute",
+    top: -6,
+    right: -8,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filtroBadgeText: {
+    fontFamily: fonts.bold,
+    fontSize: 10,
+    color: "#FFFFFF",
+  },
+  chipsAtivos: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+  },
+  chipAtivo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  chipAtivoText: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.primary,
+  },
+  limparTudo: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.primary,
+    textAlign: "center",
+  },
+  vazioWrap: {
+    alignItems: "center",
+    gap: 4,
   },
   sectionHeader: {
     flexDirection: "row",
